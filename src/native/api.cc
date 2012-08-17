@@ -12,6 +12,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #include <v8.h>
 #include "api.h"
@@ -46,6 +49,8 @@ Persistent<Context> sCreateContext() {
   tGlobal->Set(String::New("evalInSandbox"), FunctionTemplate::New(sEvalInSandbox));
 
   tGlobal->Set(String::New("evalFile"), FunctionTemplate::New(sEvalFile));
+
+  tGlobal->Set(String::New("getLastModified"), FunctionTemplate::New(sGetLastModified));
 
   return Context::New(NULL, tGlobal);
 }
@@ -264,6 +269,26 @@ Handle<Value> sEvalInSandbox(const Arguments &pArgs) {
 Handle<Value> sEvalFile(const Arguments &pArgs) {
   return sEvalScript(pArgs, false, false);
 }
+
+
+Handle<Value> sGetLastModified(const Arguments &pArgs) {
+  if (pArgs.Length() != 1) {
+    return ThrowException(String::New("Too many arguments"));
+  }
+
+  String::Utf8Value tFileName(pArgs[0]);
+  
+  struct stat tStat;
+
+  if (stat(*tFileName, &tStat) == -1) {
+    return ThrowException(String::New("Could not stat file."));
+  }
+
+  time_t tTime = tStat.st_mtime;
+
+  return Integer::New(tTime);
+}
+
 
 Handle<Value> sReadFile(const char *pName) {
   FILE *tFile = fopen(pName, "rb");

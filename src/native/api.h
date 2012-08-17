@@ -42,6 +42,8 @@ Handle<Value> sEvalInSandbox(const Arguments &pArgs);
 
 Handle<Value> sEvalFile(const Arguments &pArgs);
 
+Handle<Value> sGetLastModified(const Arguments &pArgs);
+
 
 Handle<Value> sReadFile(const char *pName);
 

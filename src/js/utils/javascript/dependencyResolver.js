@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
+/**               
+ * @author Jason Parrott                                                                                                   
  *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+ * Copyright (C) 2012 Jason Parrott.                                                                                                 
+ * This code is licensed under the zlib license. See LICENSE for details.                                                             
  */
 
 
