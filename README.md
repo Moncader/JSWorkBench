@@ -6,6 +6,9 @@ This README will attempt to explain what JSWorkBench is and how to use it with s
 
 JSWorkBench is a development tool for working with projects (usually code) on the command line.
 
+## License
+
+JSWorkBench is licensed under the zlib license. See the LICENSE file for more details.
 
 ## The Name
 
