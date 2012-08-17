@@ -1,0 +1,3 @@
+[submodule "vendor/v8"]
+	path = vendor/v8
+	url = git://github.com/v8/v8.git
