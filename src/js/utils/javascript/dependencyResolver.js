@@ -72,11 +72,9 @@
     for (i = 0; i < il; i++) {
       tCurrentFile = pFiles[i];
       tCurrentNamespace = tNamespaces[i];
-      if (!pIsQuiet) print('Evaluating ' + tCurrentFile.file + ' (' + tCurrentNamespace + ')...');
       try {
         evalFileInSandbox(tCurrentFile.file, tSandboxGlobal);
       } catch (e) {} // ignore errors cause we don't care.
-      if (!pIsQuiet) print('');
     }
 
     var tCompileOrder = new Array(),
