@@ -64,7 +64,7 @@
 
     if (system('test -f ' + tJarFile + '; echo $?')[0] !== '0') {
       if (!this.config.isQuiet) print('Downloading Google Closure Compiler...');
-      var tOutput = system('wget http://closure-compiler.googlecode.com/files/compiler-latest.zip && unzip compiler-latest.zip compiler.jar && rm compiler-latest.zip && mkdir -p $(dirname ' + tJarFile + ') && mv compiler.jar ' + tJarFile);
+      var tOutput = system('curl http://closure-compiler.googlecode.com/files/compiler-latest.zip -o compiler-latest.zip && unzip compiler-latest.zip compiler.jar && rm compiler-latest.zip && mkdir -p $(dirname ' + tJarFile + ') && mv compiler.jar ' + tJarFile);
       if (!this.config.isQuiet) print(tOutput);
       if (system('test -f ' + tJarFile + '; echo $?')[0] !== '0') {
         print('Could not download the closure compiler. Aborting.');
