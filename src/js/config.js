@@ -110,6 +110,7 @@
       tConfig.targets = tConfigJSON.targets;
       for (k in tConfig.targets) {
         tConfig.targets[k].id = k;
+        tConfig.targets[k].regex = new RegExp(k);
       }
     }
 

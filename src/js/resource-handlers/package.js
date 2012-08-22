@@ -66,20 +66,20 @@
     if (this.data.targets) {
       var tTargets = this.data.targets;
       for (var i = 0, il = tTargets.length; i < il; i++) {
-        tTarget = tPackageConfig.targets[tTargets[i]];
-        tPackageWorkBench.runAction('build', [tTarget.id]);
-        tOutputs = tPackageConfig.expand(tTarget.outputs);
-        tResources[i] = {
-          file: this.workspace + '/package/' + tOutputs
-        };
+        var tOutputs = tPackageWorkBench.runAction('build', [tTargets[i]]);
+        for (var k = 0, kl = tOutputs.length; k < kl; k++) {
+          tResources.push({
+            file: this.workspace + '/package/' + tOutputs[k]
+          });
+        }
       }
     } else {
-      tPackageWorkBench.runAction('build', [this.data.target]);
-      tTarget = tPackageConfig.targets[this.data.target];
-      tOutputs = tPackageConfig.expand(tTarget.outputs);
-      tResources[0] = {
-        file: this.workspace + '/package/' + tOutputs
-      };
+      var tOutputs = tPackageWorkBench.runAction('build', [this.data.target]);
+      for (var k = 0, kl = tOutputs.length; k < kl; k++) {
+        tResources.push({
+          file: this.workspace + '/package/' + tOutputs[k]
+        });
+      }
     }
 
     chdir(tCurrentWorkingDirectory);

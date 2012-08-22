@@ -32,8 +32,10 @@
     }
 
     function buildTarget(pTarget, pConfig) {
-      if (!pConfig.isQuiet) print('Building target ' + pTarget.id);
       pConfig.properties.targetId = pTarget.id;
+      var tTargetName = pConfig.properties.target;
+
+      if (!pConfig.isQuiet) print('Building target ' + pTarget.id + ' (' + tTargetName + ')...');
 
       var tBuilderType = pTarget.builder || pConfig.properties.defaultBuilder;
       var tBuilders = new Object();
@@ -80,7 +82,7 @@
           }
           tResource = tNewResource;
         } else {
-          tResourceId = pTarget.id + '__resource_' + i;
+          tResourceId = tTargetName + '__resource_' + i;
         }
 
         tResource.id = tResourceId;
@@ -96,7 +98,7 @@
         var tWorkspace = (pConfig.properties.buildDir || 'build') +
               '/' + tResourceId;
 
-        system('mkdir -p ' + tWorkspace);
+        system("mkdir -p '" + tWorkspace + "'");
 
         var tResourceHandler = new tResourceHandlers[tResource.type](pConfig);
         tResourceHandler.setData(tResource, tWorkspace);
@@ -129,28 +131,39 @@
       var tFinalOutputs;
 
       if ((tFinalOutputs = (pConfig.isDry ? tBuilder.buildDry() : tBuilder.build())) === false) {
-        throw new Error('Building target ' + pTarget.id + ' failed.');
+        throw new Error('Building target ' + pTarget.id + ' (' + tTargetName + ') failed.');
       }
 
-      if (!pConfig.isQuiet) print('Finished building target ' + pTarget.id);
+      if (!pConfig.isQuiet) print('Finished building target ' + pTarget.id + ' (' + tTargetName + ').');
 
       return tFinalOutputs;
     }
 
     pActions.build = function(pConfig, pTarget) {
       if (!pTarget) {
-        var tOutputs = new Array();
-        for (var i in pConfig.targets) {
-          var tTarget = pConfig.targets[i];
-          tOutputs = tOutputs.concat(buildTarget(tTarget, pConfig));
-        }
-        return tOutputs;
+        print('Please select a target. Valid targets are:');
+        pConfig.printTargets();
+        return null;
       } else {
-        var tTarget = pConfig.targets[pTarget];
-        if (!tTarget) {
-          print('The target ' + pTarget + ' does not exist. Valid targets are:');
+        var tTargets = pConfig.targets;
+        var tGotOne = false;
+        var tOutputs = new Array();
+        for (var k in tTargets) {
+          var tResult = tTargets[k].regex.exec(pTarget);
+          if (tResult) {
+            tGotOne = true;
+            pConfig.properties.target = pTarget;
+            for (var i = 1, il = tResult.length; i < il; i++) {
+              pConfig.properties['target.' + i] = tResult[i];
+            }
+            tOutputs = tOutputs.concat(buildTarget(tTargets[k], pConfig));
+          }
+        }
+        if (tGotOne === false) {
+          print('The target ' + pTarget + ' did not have any matches. Valid targets are:');
           pConfig.printTargets();
         } else {
+          return tOutputs;
           return buildTarget(tTarget, pConfig);
         }
       }
