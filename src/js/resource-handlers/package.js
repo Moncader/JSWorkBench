@@ -18,6 +18,7 @@
     this.config = null;
     this.workspace = '';
     this.config = pConfig;
+    this.hasBeenBuilt = false;
   }
 
   PackageResourceHandler.prototype = new global.plugins.ResourceHandler();
@@ -46,10 +47,17 @@
 
     var tHandler = new tLocationHandlers[tLocation](this.config);
     tHandler.setData(this.workspace + '/package', this.data);
+    if ((this.hasBeenBuilt = tHandler.hasBeenBuilt()) === true) {
+      return true;
+    }
     return tHandler.execute();
   };
 
   PackageResourceHandler.prototype.getResources = function() {
+    if (this.hasBeenBuilt === true) {
+      return new Array(0);
+    }
+
     var tCurrentWorkingDirectory = getcwd();
     chdir(this.workspace + '/package');
 

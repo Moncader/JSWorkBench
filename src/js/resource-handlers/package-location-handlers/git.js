@@ -10,11 +10,15 @@
   var system = global.system,
   print = global.print;
 
+  var mBuildCache = new Object();
+
   function GitHandler(pConfig) {
     this.url = '';
     this.branch = 'master';
     this.root = '';
     this.config = pConfig;
+    this.target = null;
+    this.targets = null;
   };
 
   GitHandler.prototype = new global.plugins.LocationHandler();
@@ -25,6 +29,29 @@
     if ('branch' in pData) {
       this.branch = pData.branch;
     }
+    this.target = pData.target;
+    this.targets = pData.targets;
+  };
+
+  GitHandler.prototype.hasBeenBuilt = function() {
+    if (mBuildCache[this.url] !== void 0) {
+      if (this.targets !== null) {
+        for (var i = 0, il = this.targets.length; i < il; i++) {
+          if (mBuildCache[this.url].indexOf(this.targets[i]) > -1) {
+            // TODO: Support this properly.
+            // We should actually make a diff of what targets
+            // need updating. Right now if only one has been built
+            // we kill it there.
+            return true;
+          }
+        }
+      } else {
+        if (mBuildCache[this.url].indexOf(this.target) > -1) {
+          return true;
+        }
+      }
+    }
+    return false;
   };
 
   GitHandler.prototype.execute = function() {
@@ -37,6 +64,26 @@
     tOut = system('cd ' + tRoot + ' && git submodule update --init');
 
     if (!this.config.isQuiet) print(tOut);
+
+    var tCache = mBuildCache[this.url];
+    if (tCache === void 0) {
+      if (this.targets) {
+        mBuildCache[this.url] = new Array(this.targets.length);
+        for (var i = 0, il = this.targets.length; i < il; i++) {
+          mBuildCache[this.url][i] = this.targets[i];
+        }
+      } else {
+        mBuildCache[this.url] = [this.target];
+      }
+    } else {
+      if (this.targets) {
+        for (var i = 0, il = this.targets.length; i < il; i++) {
+          tCache.push(this.targets[i]);
+        }
+      } else {
+        tCache.push(this.target);
+      }
+    }
 
     return true;
   };
