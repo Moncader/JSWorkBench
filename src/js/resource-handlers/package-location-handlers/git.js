@@ -35,7 +35,7 @@
 
   GitHandler.prototype.hasBeenBuilt = function() {
     if (mBuildCache[this.url] !== void 0) {
-      if (this.targets !== null) {
+      if (this.targets) {
         for (var i = 0, il = this.targets.length; i < il; i++) {
           if (mBuildCache[this.url].indexOf(this.targets[i]) > -1) {
             // TODO: Support this properly.
@@ -45,8 +45,12 @@
             return true;
           }
         }
-      } else {
+      } else if (this.target) {
         if (mBuildCache[this.url].indexOf(this.target) > -1) {
+          return true;
+        }
+      } else {
+        if (mBuildCache[this.url] !== void 0) {
           return true;
         }
       }
@@ -55,15 +59,17 @@
   };
 
   GitHandler.prototype.execute = function() {
-    var tRoot = this.root;
+    if (global.args.indexOf('--no-git-pull') === -1) {
+      var tRoot = this.root;
 
-    var tOut = system("if [ -d '" + tRoot + "' ] ; then cd '" + tRoot + "' && git pull origin " + this.branch + "; else git clone -b " + this.branch + " " + this.url + " " + tRoot + '; fi');
+      var tOut = system("if [ -d '" + tRoot + "' ] ; then cd '" + tRoot + "' && git pull origin " + this.branch + "; else git clone -b " + this.branch + " " + this.url + " " + tRoot + '; fi');
 
-    if (!this.config.isQuiet) print(tOut);
+      if (!this.config.isQuiet) print(tOut);
 
-    tOut = system('cd ' + tRoot + ' && git submodule update --init');
+      tOut = system('cd ' + tRoot + ' && git submodule update --init');
 
-    if (!this.config.isQuiet) print(tOut);
+      if (!this.config.isQuiet) print(tOut);
+    }
 
     var tCache = mBuildCache[this.url];
     if (tCache === void 0) {
@@ -72,15 +78,17 @@
         for (var i = 0, il = this.targets.length; i < il; i++) {
           mBuildCache[this.url][i] = this.targets[i];
         }
-      } else {
+      } else if (this.target) {
         mBuildCache[this.url] = [this.target];
+      } else {
+        mBuildCache[this.url] = [];
       }
     } else {
       if (this.targets) {
         for (var i = 0, il = this.targets.length; i < il; i++) {
           tCache.push(this.targets[i]);
         }
-      } else {
+      } else if (this.target) {
         tCache.push(this.target);
       }
     }
