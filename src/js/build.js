@@ -141,8 +141,17 @@
 
     pActions.build = function(pConfig, pTarget) {
       if (!pTarget) {
+        var tTargets = pConfig.targets;
+        for (var k in tTargets) {
+          if (tTargets[k].default === true) {
+            pConfig.properties.target = k;
+            return buildTarget(tTargets[k], pConfig);
+          }
+        }
+
         print('Please select a target. Valid targets are:');
         pConfig.printTargets();
+
         return null;
       } else {
         var tTargets = pConfig.targets;
@@ -164,7 +173,6 @@
           pConfig.printTargets();
         } else {
           return tOutputs;
-          return buildTarget(tTarget, pConfig);
         }
       }
 

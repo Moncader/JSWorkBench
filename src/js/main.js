@@ -45,10 +45,13 @@
       return 2;
     }
 
-    var tActionName = args[1];
-    args.splice(0, 2);
+    var i = 1;
+    for (var il = args.length; i < il; i++) {
+      if (args[i][0] !== '-') break;
+    }
+    var tActionName = args[i];
 
-    if (tWorkBench.runAction(tActionName, args) === false) {
+    if (tWorkBench.runAction(tActionName, args.slice(i + 1)) === false) {
       printUsage();
       return 3;
     }
