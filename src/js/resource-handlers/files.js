@@ -74,11 +74,11 @@
         .split(/\n/)
       .filter(function(pElement) {
         for (var i = 0; i < tIncludesLength; i++) {
-          if (!tIncludes[i].test(pElement)) {
-            return false;
+          if (tIncludes[i].test(pElement)) {
+            return true;
           }
         }
-        return true;
+        return false;
       });
     } else {
       tFiles = this.files.filter(function(pElement) {
