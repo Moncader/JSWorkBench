@@ -113,6 +113,8 @@
 
         tResourceList = tResourceList.concat(tPartialResourceList);
       }
+
+      tResourceList = global.util.removeRedundantResources(tResourceList);
       
       var tOutputs = generateOutputs(pConfig, pTarget.outputs, tResourceList);
 

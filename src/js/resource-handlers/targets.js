@@ -44,12 +44,8 @@
     for (var i = 0, il = this.targets.length; i < il; i++) {
       print('Building dependency\n');
       var tTarget = this.config.targets[this.targets[i]];
-      var tOutputs = this.config.workbench.runAction('build', [tTarget.id]);
-      for (var j = 0, jl = tOutputs.length; j < jl; j++) {
-        tResources.push({
-          file: tOutputs[j]
-        });
-      }
+      var tOutputs = this.config.workbench.runAction('merge', [tTarget.id]);
+      tResources = tResources.concat(tOutputs);
     }
 
     return tResources;
