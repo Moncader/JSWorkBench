@@ -13,4 +13,25 @@
     return false;
   };
 
+  global.util.removeRedundantResources = function(pResources) {
+    var prev;
+
+    pResources.sort(function (a, b) {
+        if (a.file < b.file) {
+          return -1;
+        } else if (a.file > b.file) {
+          return 1;
+        }
+        return 0;
+      });
+
+    return pResources.filter(function (e) {
+        if (e == prev) {
+          return false;
+        }
+        prev = e;
+        return true;
+      });
+  };
+
 }(this));
