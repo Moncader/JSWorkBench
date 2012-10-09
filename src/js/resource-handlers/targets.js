@@ -46,9 +46,21 @@
       var tTarget = this.config.targets[this.targets[i]];
       var tOutputs = this.config.workbench.runAction('build', [tTarget.id]);
       for (var j = 0, jl = tOutputs.length; j < jl; j++) {
+        if (tOutputs[j].skipped !== true) {
+          // Renaming in case the because closuer-compiler doesn't allow input and output files to have the same name.
+          var tIndex = tOutputs[j].lastIndexOf('/') + 1;
+          var tNewName = tOutputs[j].slice(0, tIndex) + '_' + tOutputs[j].slice(tIndex);
+          if (system('test -f ' + tNewName + '; echo $?')[0] === '0'
+            && system('test -f ' + tOutputs[j] + '; echo $?')[0] !== '0') {
+            tOutputs[j] = tNewName;
+          } else if (system('test -f ' + tOutputs[j] + '; echo $?')[0] === '0') {
+            global.system('mv ' + tOutputs[j] + ' ' + (tOutputs[j] = tNewName));
+          }
+        }
         tResources.push({
           file: tOutputs[j]
         });
+        global.util.negateProcessed(tOutputs[j]);
       }
     }
 

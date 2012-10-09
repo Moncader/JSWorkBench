@@ -1,5 +1,7 @@
 (function(global) {
 
+  mProcessedResources = new Array();
+
   global.util.outputNeedsUpdate = function(pOutput, pResources) {
     var getLastModified = global.getLastModified;
     var tOutputLastModified = getLastModified(pOutput);
@@ -11,6 +13,32 @@
     }
 
     return false;
+  };
+
+  global.util.removeRedundantResources = function(pResources) {
+    var prev;
+
+    pResources.sort(function (a, b) {
+        if (a.file < b.file) {
+          return -1;
+        } else if (a.file > b.file) {
+          return 1;
+        }
+        return 0;
+      });
+
+    return pResources.filter(function (e) {
+        if (e.file == prev || e.file in mProcessedResources) {
+          return false;
+        }
+        prev = e.file;
+        mProcessedResources[e.file] = true;
+        return true;
+      });
+  };
+
+  global.util.negateProcessed = function(pResource) {
+    delete mProcessedResources[pResource];
   };
 
 }(this));
