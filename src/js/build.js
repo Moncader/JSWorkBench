@@ -113,6 +113,12 @@
 
         tResourceList = tResourceList.concat(tPartialResourceList);
       }
+
+      tResourceList = global.util.removeRedundantResources(tResourceList);
+      if (tResourceList.length === 0) {
+        if (!pConfig.isQuiet) print('Skipping target ' + pTarget.id + ' (' + tTargetName + ') to avoid redundancy.');
+        return [pConfig.expand(pTarget.outputs)];
+      }
       
       var tOutputs = generateOutputs(pConfig, pTarget.outputs, tResourceList);
 
