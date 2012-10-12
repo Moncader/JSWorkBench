@@ -1,11 +1,20 @@
 (function(global) {
 
   global.util.outputNeedsUpdate = function(pOutput, pResources) {
-    var getLastModified = global.getLastModified;
-    var tOutputLastModified = getLastModified(pOutput);
+    var stat = global.stat;
+    var tOutputStat = stat(pOutput);
+    if (tOutputStat === null) {
+      return true;
+    }
+
+    var tOutputLastModified = tOutputStat.mtime;
 
     for (var i = 0, il = pResources.length; i < il; i++) {
-      if (getLastModified(pResources[i]) > tOutputLastModified) {
+      var tResourceStat = stat(pResources[i]);
+      if (tResourceStat === null) {
+        continue;
+      }
+      if (tResourceStat.mtime > tOutputLastModified) {
         return true;
       }
     }

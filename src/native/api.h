@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -42,7 +42,7 @@ Handle<Value> sEvalInSandbox(const Arguments &pArgs);
 
 Handle<Value> sEvalFile(const Arguments &pArgs);
 
-Handle<Value> sGetLastModified(const Arguments &pArgs);
+Handle<Value> sStat(const Arguments &pArgs);
 
 
 Handle<Value> sReadFile(const char *pName);

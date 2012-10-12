@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -26,7 +26,7 @@
     var tWorkBench = new WorkBench();
 
     function printUsage() {
-      print("Usage: jsworkbench [-f BUILD_FILE] [--dry] ACTION [arg1[, arg2...]");
+      print("Usage: jsworkbench [-f BUILD_FILE] [--quiet] [--dry] ACTION [arg1[, arg2...]");
       print("Actions are:");
       for (var k in tWorkBench.actions) {
         print(' ' + k);

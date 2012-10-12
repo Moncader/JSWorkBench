@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -22,6 +22,7 @@
     this.workbench = null;
     this.isDry = false;
     this.isQuiet = false;
+    this.locals = {};
   }
   Config.prototype = {
     /**
@@ -95,6 +96,10 @@
     var tConfigJSON = tConfig.raw = JSON.parse(read(pFileName));
     var k;
 
+    if (!tConfigJSON) {
+      throw new Error('Failed to parse build file. Error in JSON data.');
+    }
+
     if (tConfigJSON.properties !== void 0) {
       for (k in tConfigJSON.properties) {
         tConfig.properties[k] = tConfigJSON.properties[k];
@@ -112,6 +117,19 @@
         tConfig.targets[k].id = k;
         tConfig.targets[k].regex = new RegExp(k);
       }
+    }
+
+    var tLocalConfig = '.jsworkbenchrc';
+
+    if (tConfigJSON.properties.localConfigFile) {
+      tLocalConfig = tConfigJSON.properties.localConfigFile;
+    }
+
+    try {
+      var tLocalConfigContents = JSON.parse(read(tLocalConfig));
+      tConfig.locals = tLocalConfigContents;
+    } catch (e) {
+      // we don't care.
     }
 
     fire('parsedConfig', tConfig);

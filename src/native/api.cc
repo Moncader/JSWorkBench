@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -43,14 +43,14 @@ Persistent<Context> sCreateContext() {
   tGlobal->Set(String::New("chdir"), FunctionTemplate::New(sChdir));
 
   tGlobal->Set(String::New("getcwd"), FunctionTemplate::New(sGetcwd));
-  
+
   tGlobal->Set(String::New("evalFileInSandbox"), FunctionTemplate::New(sEvalFileInSandbox));
 
   tGlobal->Set(String::New("evalInSandbox"), FunctionTemplate::New(sEvalInSandbox));
 
   tGlobal->Set(String::New("evalFile"), FunctionTemplate::New(sEvalFile));
 
-  tGlobal->Set(String::New("getLastModified"), FunctionTemplate::New(sGetLastModified));
+  tGlobal->Set(String::New("stat"), FunctionTemplate::New(sStat));
 
   return Context::New(NULL, tGlobal);
 }
@@ -90,7 +90,7 @@ Handle<Value> sRead(const Arguments &pArgs) {
   if (pArgs.Length() != 1) {
     return ThrowException(String::New("Too many arguments."));
   }
-  
+
   String::Utf8Value tStr(pArgs[0]);
   return sReadFile(sToCString(tStr));
 }
@@ -110,7 +110,7 @@ Handle<Value> sFork(const Arguments &pArgs) {
   if (pArgs.Length() != 0) {
     return ThrowException(String::New("Too many arguments."));
   }
-  
+
   pid_t tPid = fork();
   return Integer::NewFromUnsigned(tPid);
 }
@@ -169,7 +169,7 @@ Handle<Value> sGetcwd(const Arguments &pArgs) {
   if (dir == NULL) {
     return ThrowException(String::New("Out of memory"));
   }
-  
+
   if (getcwd(dir, sizeof(char) * 1024) == NULL) {
     return ThrowException(String::New("Could not get current working directory"));
   }
@@ -229,13 +229,13 @@ Handle<Value> sEvalScript(const Arguments &pArgs, bool pIsSandboxed, bool pIsStr
       Handle<Value> tValue = tGlobalObject->Get(tKey);
       tGlobal->Set(tKey, tValue);
     }
-    
+
     tContext = Context::New(NULL, tGlobal);
     tContext->Enter();
   }
 
   TryCatch tTryCatch;
-  
+
   String::Utf8Value tScriptToEval(tContentsAsValue);
   Handle<String> tScriptHandle = String::New(*tScriptToEval);
 
@@ -270,23 +270,35 @@ Handle<Value> sEvalFile(const Arguments &pArgs) {
   return sEvalScript(pArgs, false, false);
 }
 
-
-Handle<Value> sGetLastModified(const Arguments &pArgs) {
+Handle<Value> sStat(const Arguments &pArgs) {
   if (pArgs.Length() != 1) {
     return ThrowException(String::New("Too many arguments"));
   }
 
   String::Utf8Value tFileName(pArgs[0]);
-  
+
   struct stat tStat;
 
   if (stat(*tFileName, &tStat) == -1) {
-    return ThrowException(String::New("Could not stat file."));
+    return Null();
   }
 
-  time_t tTime = tStat.st_mtime;
+  Local<Object> tStatObj = Object::New();
+  tStatObj->Set(String::New("deviceId"), Integer::New(tStat.st_dev));
+  tStatObj->Set(String::New("inodeNumber"), Integer::New(tStat.st_ino));
+  tStatObj->Set(String::New("mode"), Integer::New(tStat.st_mode));
+  tStatObj->Set(String::New("hardLinksCount"), Integer::New(tStat.st_nlink));
+  tStatObj->Set(String::New("uid"), Integer::New(tStat.st_uid));
+  tStatObj->Set(String::New("gid"), Integer::New(tStat.st_gid));
+  tStatObj->Set(String::New("specialDeviceId"), Integer::New(tStat.st_rdev));
+  tStatObj->Set(String::New("size"), Integer::New(tStat.st_size));
+  tStatObj->Set(String::New("blockSize"), Integer::New(tStat.st_blksize));
+  tStatObj->Set(String::New("blocksCount"), Integer::New(tStat.st_blocks));
+  tStatObj->Set(String::New("atime"), Integer::New(tStat.st_atime));
+  tStatObj->Set(String::New("mtime"), Integer::New(tStat.st_mtime));
+  tStatObj->Set(String::New("ctime"), Integer::New(tStat.st_ctime));
 
-  return Integer::New(tTime);
+  return tStatObj;
 }
 
 
