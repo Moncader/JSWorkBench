@@ -103,6 +103,7 @@
     if (this.output.length === 1) {
       if (system('test -f ' + this.output[0] + '; echo $?')[0] === '0') {
         if (!global.util.outputNeedsUpdate(this.output[0], this.resources)) {
+          this.output[0].skipped = true;
           return this.output;
         }
       }
@@ -111,6 +112,7 @@
       for (var i = 0, il = this.output.length; i < il; i++) {
         if (system('test -f ' + this.output[i] + '; echo $?')[0] === '0') {
           if (!global.util.outputNeedsUpdate(this.output[i], [this.resources[i]])) {
+            this.output[i].skipped = true;
             continue;
           }
         }
