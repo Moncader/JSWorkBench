@@ -106,15 +106,31 @@
           return;
         }
 
+        var tSeparateNamespace = tResourceHandler.needSeparateNamespace();
+        var resourceTracker = global.util.resourceTracker;
+        if (tSeparateNamespace) {
+          resourceTracker.push(tWorkspace);
+        }
+
         var tPartialResourceList = tResourceHandler.getResources();
         for (var j = 0, jl = tPartialResourceList.length; j < jl; j++) {
           tPartialResourceList[j].resourceIndex = i;
+        }
+        tPartialResourceList = resourceTracker.trackAndProcess(tPartialResourceList);
+        if (tSeparateNamespace) {
+          resourceTracker.pop();
         }
 
         tResourceList = tResourceList.concat(tPartialResourceList);
       }
       
       var tOutputs = generateOutputs(pConfig, pTarget.outputs, tResourceList);
+
+      if (tResourceList.length === 0) {
+        if (!pConfig.isQuiet) print('Skipping target ' + pTarget.id + ' (' + tTargetName + ') to avoid redundancy.');
+        return [pConfig.expand(pTarget.outputs)];
+      }
+      tResourceList = resourceTracker.trackAndProcess(tResourceList, true);
 
       if (tBuilder.setData(pTarget) === false) {
         throw new Error('Setting data for builder failed.');

@@ -14,7 +14,7 @@
       if (tResourceStat === null) {
         continue;
       }
-      if (tResourceStat.mtime > tOutputLastModified) {
+      if (tResourceStat.mtime >= tOutputLastModified) {
         return true;
       }
     }
