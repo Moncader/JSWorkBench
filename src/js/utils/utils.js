@@ -5,7 +5,7 @@
     var tOutputLastModified = getLastModified(pOutput);
 
     for (var i = 0, il = pResources.length; i < il; i++) {
-      if (getLastModified(pResources[i]) > tOutputLastModified) {
+      if (getLastModified(pResources[i]) >= tOutputLastModified) {
         return true;
       }
     }
