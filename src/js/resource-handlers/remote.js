@@ -67,6 +67,8 @@
     return tResources;
   };
 
+  RemoteResourceHandler.prototype.needSeparateNamespace = function() { return true; };
+
   global.on('queryResourceHandlers', function(pHandlers) {
     pHandlers['remote'] = RemoteResourceHandler;
   });

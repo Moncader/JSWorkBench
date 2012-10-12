@@ -95,6 +95,10 @@
     return tResources;
   };
 
+  PackageResourceHandler.prototype.needSeparateNamespace = function() {
+    return true; 
+  };
+
   global.on('queryResourceHandlers', function(pHandlers) {
     pHandlers['package'] = PackageResourceHandler;
   });
