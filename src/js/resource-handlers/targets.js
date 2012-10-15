@@ -51,14 +51,15 @@
       var tOutputs = this.config.workbench.runAction('build', [tTarget.id]);
       for (var j = 0, jl = tOutputs.length; j < jl; j++) {
         if (tOutputs[j].skipped !== true 
-          && system('test -f ' + tOutputs[j] + '; echo $?')[0] === '0') {
+          && global.stat(tOutputs[j])) {
           // Renaming is required here because closuer-compiler doesn't allow input and output files to have the same name.
           var tSrc = tOutputs[j];
           var tDest = getDest(tSrc, tTarget.id + '_');
-          while (system('test -f ' + tDest + '; echo $?')[0] === '0') {
+          while (global.stat(tDest)) {
             tDest = getDest(tDest, '_');
           }
           global.system('mv ' + tSrc + ' ' + tDest);
+          print('mv ' + tSrc + ' ' + tDest);
           tResources.push({file: tDest});
           global.util.resourceTracker.clear(tDest);
         }

@@ -62,11 +62,11 @@
   ClosureCompilerBuilder.prototype.build = function() {
     var tJarFile = this.config.properties['closure-compiler-jar'];
 
-    if (system('test -f ' + tJarFile + '; echo $?')[0] !== '0') {
+    if (global.stat(tJarFile) === null) {
       if (!this.config.isQuiet) print('Downloading Google Closure Compiler...');
       var tOutput = system('curl http://closure-compiler.googlecode.com/files/compiler-latest.zip -o compiler-latest.zip && unzip compiler-latest.zip compiler.jar && rm compiler-latest.zip && mkdir -p $(dirname ' + tJarFile + ') && mv compiler.jar ' + tJarFile);
       if (!this.config.isQuiet) print(tOutput);
-      if (system('test -f ' + tJarFile + '; echo $?')[0] !== '0') {
+      if (global.stat(tJarFile) === null) {
         print('Could not download the closure compiler. Aborting.');
         return false;
       }
@@ -101,7 +101,7 @@
 
 
     if (this.output.length === 1) {
-      if (system('test -f ' + this.output[0] + '; echo $?')[0] === '0') {
+      if (global.stat(this.output[0])) {
         if (!global.util.outputNeedsUpdate(this.output[0], this.resources)) {
           this.output[0].skipped = true;
           return this.output;
@@ -110,7 +110,7 @@
       execute(tCmdLine, this.output[0], this.resources.join(' '));
     } else {
       for (var i = 0, il = this.output.length; i < il; i++) {
-        if (system('test -f ' + this.output[i] + '; echo $?')[0] === '0') {
+        if (global.stat(this.output[i])) {
           if (!global.util.outputNeedsUpdate(this.output[i], [this.resources[i]])) {
             this.output[i].skipped = true;
             continue;
