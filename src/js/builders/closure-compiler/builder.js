@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -60,7 +60,8 @@
   };
 
   ClosureCompilerBuilder.prototype.build = function() {
-    var tJarFile = this.config.properties['closure-compiler-jar'];
+    var tJarFile = this.config.properties['closure-compiler-jar'] ||
+      (this.config.properties.vendorDir || 'vendor') + '/google-closure-compiler/compiler.jar';
 
     if (global.stat(tJarFile) === null) {
       if (!this.config.isQuiet) print('Downloading Google Closure Compiler...');

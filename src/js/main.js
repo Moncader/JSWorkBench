@@ -26,14 +26,22 @@
     var tWorkBench = new WorkBench();
 
     function printUsage() {
-      print("Usage: jsworkbench [-f BUILD_FILE] [--quiet] [--dry] ACTION [arg1[, arg2...]");
-      print("Actions are:");
+      print('Usage: jsworkbench [-f BUILD_FILE] [--quiet] [--dry] ACTION/COMMAND [arg1[, arg2...]');
+
+      print('\nCommands are:');
+
+      for (var k in tWorkBench.commands) {
+        print(' ' + k);
+      }
+
+      print('\nActions are:');
+
       for (var k in tWorkBench.actions) {
         print(' ' + k);
       }
     }
 
-    tWorkBench.actions.help = printUsage;
+    tWorkBench.commands.help = printUsage;
 
     if (!tWorkBench.load()) {
       printUsage();
@@ -49,11 +57,18 @@
     for (var il = args.length; i < il; i++) {
       if (args[i][0] !== '-') break;
     }
-    var tActionName = args[i];
+    var tActionOrCommandName = args[i];
 
-    if (tWorkBench.runAction(tActionName, args.slice(i + 1)) === false) {
-      printUsage();
-      return 3;
+    if (tActionOrCommandName in tWorkBench.commands) {
+      if (tWorkBench.runCommand(tActionOrCommandName, args.slice(i + 1)) === false) {
+        printUsage();
+        return 3;
+      }
+    } else {
+      if (tWorkBench.runAction(tActionOrCommandName, args.slice(i + 1)) === false) {
+        printUsage();
+        return 4;
+      }
     }
   }
   global.main = main;

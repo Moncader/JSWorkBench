@@ -15,14 +15,15 @@
   global.Config = Config;
 
   function Config() {
-    this.raw = new Object();
-    this.properties = new Object();
-    this.resources = new Object();
-    this.targets = new Object();
+    this.raw = {};
+    this.properties = {};
+    this.resources = {};
+    this.targets = {};
     this.workbench = null;
     this.isDry = false;
     this.isQuiet = false;
     this.locals = {};
+    this.plugins = {};
   }
   Config.prototype = {
     /**
@@ -109,6 +110,10 @@
 
     if (tConfigJSON.resources !== void 0) {
       tConfig.resources = tConfigJSON.resources;
+    }
+
+    if (tConfigJSON.plugins !== void 0) {
+      tConfig.plugins = tConfigJSON.plugins;
     }
 
     if (tConfigJSON.targets !== void 0) {

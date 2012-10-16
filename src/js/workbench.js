@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -10,9 +10,10 @@
 
   function WorkBench() {
     this.config = new Object();
-    this.actions = {
+    this.commands = {
       version: printVersion
     };
+    this.actions = {};
   }
   WorkBench.prototype = {
     /**
@@ -20,20 +21,27 @@
      * @param {string} pConfigFile The file path to the config file to open.
      */
     load: function(pConfigFile) {
-      var tConfig;
-
       try {
-        tConfig = this.config = parseConfig(pConfigFile);
+        var tConfig = this.config = parseConfig(pConfigFile);
+        tConfig.workbench = this;
       } catch (e) {
-        print('Could not find config file.' + (pConfigFile ? ' (' + pConfigFile + ')' : ''));
-        return false;
+        this.config = null;
       }
 
-      tConfig.workbench = this;
-
+      fire('registerCommands', this.commands);
       fire('registerActions', this.actions);
 
       return true;
+    },
+
+    runCommand: function(pName, pArguments) {
+      var tCommand = this.commands[pName];
+      if (typeof tCommand !== 'function') {
+        print('The given command (' + pName + ') does not exist.');
+        return false;
+      }
+
+      return tCommand.apply(global, pArguments);
     },
 
     /**
@@ -44,10 +52,15 @@
      * @return {*} Returns whatever the given action returns.
      */
     runAction: function(pName, pArguments) {
+      if (this.config === null) {
+        print('Actions require a config file and there was none found.');
+        return false;
+      }
+
       var tAction = this.actions[pName];
       if (typeof tAction !== 'function') {
         print('The given action (' + pName + ') does not exist.');
-        return;
+        return false;
       }
 
       return tAction.apply(global, [this.config].concat(pArguments));

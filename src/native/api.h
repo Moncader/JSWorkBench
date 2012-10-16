@@ -44,6 +44,12 @@ Handle<Value> sEvalFile(const Arguments &pArgs);
 
 Handle<Value> sStat(const Arguments &pArgs);
 
+Handle<Value> sSetenv(const Arguments &pArgs);
+
+Handle<Value> sGetenv(const Arguments &pArgs);
+
+Handle<Value> sUnsetenv(const Arguments &pArgs);
+
 
 Handle<Value> sReadFile(const char *pName);
 

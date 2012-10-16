@@ -52,6 +52,12 @@ Persistent<Context> sCreateContext() {
 
   tGlobal->Set(String::New("stat"), FunctionTemplate::New(sStat));
 
+  tGlobal->Set(String::New("setenv"), FunctionTemplate::New(sSetenv));
+
+  tGlobal->Set(String::New("getenv"), FunctionTemplate::New(sGetenv));
+
+  tGlobal->Set(String::New("unsetenv"), FunctionTemplate::New(sUnsetenv));
+
   return Context::New(NULL, tGlobal);
 }
 
@@ -299,6 +305,53 @@ Handle<Value> sStat(const Arguments &pArgs) {
   tStatObj->Set(String::New("ctime"), Integer::New(tStat.st_ctime));
 
   return tStatObj;
+}
+
+Handle<Value> sSetenv(const Arguments &pArgs) {
+  if (pArgs.Length() != 2) {
+    return ThrowException(String::New("Need 2 arguments"));
+  }
+
+  String::Utf8Value tName(pArgs[0]);
+  String::Utf8Value tValue(pArgs[1]);
+
+  if (setenv(*tName, *tValue, 1) != 0) {
+    return ThrowException(String::New("Failed to set environment variable"));
+  }
+
+  return Undefined();
+}
+
+Handle<Value> sGetenv(const Arguments &pArgs) {
+  if (pArgs.Length() != 1) {
+    return ThrowException(String::New("Need 1 argument"));
+  }
+
+  String::Utf8Value tName(pArgs[0]);
+
+  char *tValue;
+
+  if ((tValue = getenv(*tName)) == NULL) {
+    return Null();
+  }
+
+  Handle<String> tResult = String::New(tValue);
+
+  return tResult;
+}
+
+Handle<Value> sUnsetenv(const Arguments &pArgs) {
+  if (pArgs.Length() != 1) {
+    return ThrowException(String::New("Need 1 argument1"));
+  }
+
+  String::Utf8Value tName(pArgs[0]);
+
+  if (unsetenv(*tName) != 0) {
+    return ThrowException(String::New("Failed to unset environment variable"));
+  }
+
+  return Undefined();
 }
 
 
