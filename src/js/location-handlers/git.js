@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -59,17 +59,15 @@
   };
 
   GitHandler.prototype.execute = function() {
-    if (global.args.indexOf('--no-git-pull') === -1) {
-      var tRoot = this.root;
+    var tRoot = this.root;
 
-      var tOut = system("if [ -d '" + tRoot + "' ] ; then cd '" + tRoot + "' && git pull origin " + this.branch + "; else git clone -b " + this.branch + " " + this.url + " " + tRoot + '; fi');
+    var tOut = system("if [ -d '" + tRoot + "' ] ; then cd '" + tRoot + "' && git pull origin " + this.branch + "; else git clone -b " + this.branch + " " + this.url + " " + tRoot + '; fi');
 
-      if (!this.config.isQuiet) print(tOut);
+    if (!this.config.isQuiet) print(tOut);
 
-      tOut = system('cd ' + tRoot + ' && git submodule update --init');
+    tOut = system('cd ' + tRoot + ' && git submodule update --init');
 
-      if (!this.config.isQuiet) print(tOut);
-    }
+    if (!this.config.isQuiet) print(tOut);
 
     var tCache = mBuildCache[this.url];
     if (tCache === void 0) {

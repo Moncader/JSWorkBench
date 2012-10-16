@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -23,7 +23,7 @@
           for (var j = 0, jl = tOutputCaptures.length; j < jl; j++) {
             tNewOutputEntry = tNewOutputEntry.replace(new RegExp('\\$' + (j + 1), 'g'), tOutputCaptures[j]);
           }
-          
+
           tNewOutputs.push(pConfig.expand(tNewOutputEntry));
         }
       }
@@ -41,7 +41,7 @@
       var tBuilders = new Object();
 
       global.fire('queryBuilders', tBuilders);
-      
+
       if (!(tBuilderType in tBuilders)) {
         print('The specified builder (' + tBuilderType + ") is not supported.\nSupported types are:");
         for (var k in tBuilders) {
@@ -53,7 +53,7 @@
       var tBuilder = new tBuilders[tBuilderType](pConfig);
 
       var tResourceHandlers = new Object();
-      
+
       global.fire('queryResourceHandlers', tResourceHandlers);
 
       var tResources = pTarget.resources;
@@ -98,12 +98,19 @@
         var tWorkspace = (pConfig.properties.buildDir || 'build') +
               '/' + tResourceId;
 
-        system("mkdir -p '" + tWorkspace + "'");
+        var tNeedsPrepare = false;
+        if (global.stat(tWorkspace) === null) {
+          tNeedsPrepare = true;
+          system("mkdir -p '" + tWorkspace + "'");
+        }
 
         var tResourceHandler = new tResourceHandlers[tResource.type](pConfig);
         tResourceHandler.setData(tResource, tWorkspace);
-        if (!tResourceHandler.prepare()) {
-          return;
+
+        if (tNeedsPrepare === true) {
+          if (!tResourceHandler.prepare()) {
+            return;
+          }
         }
 
         var tSeparateNamespace = tResourceHandler.needSeparateNamespace();
@@ -123,7 +130,7 @@
 
         tResourceList = tResourceList.concat(tPartialResourceList);
       }
-      
+
       var tOutputs = generateOutputs(pConfig, pTarget.outputs, tResourceList);
 
       if (tResourceList.length === 0) {

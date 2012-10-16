@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -47,10 +47,33 @@
 
     var tHandler = new tLocationHandlers[tLocation](this.config);
     tHandler.setData(this.workspace + '/package', this.data);
-    if ((this.hasBeenBuilt = tHandler.hasBeenBuilt()) === true) {
-      return true;
+    if (tHandler.execute() === false) {
+      return false;
     }
-    return tHandler.execute();
+
+    var tCurrentWorkingDirectory = getcwd();
+    chdir(this.workspace + '/package');
+
+    var tPackageWorkBench = new WorkBench();
+    if (!tPackageWorkBench.load(this.data.buildFile)) {
+      throw new Error('Failed to get resources of package.');
+    }
+    var tPackageConfig = tPackageWorkBench.config;
+    tPackageConfig.isDry = this.config.isDry;
+    tPackageConfig.isQuiet = this.config.isQuiet;
+
+    if (this.data.targets) {
+      var tTargets = this.data.targets;
+      for (var i = 0, il = tTargets.length; i < il; i++) {
+        tPackageWorkBench.runAction('update', [tTargets[i]]);
+      }
+    } else {
+      tPackageWorkBench.runAction('update', [this.data.target]);
+    }
+
+    chdir(tCurrentWorkingDirectory);
+
+    return true;
   };
 
   PackageResourceHandler.prototype.getResources = function() {
@@ -96,7 +119,7 @@
   };
 
   PackageResourceHandler.prototype.needSeparateNamespace = function() {
-    return true; 
+    return true;
   };
 
   global.on('queryResourceHandlers', function(pHandlers) {

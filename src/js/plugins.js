@@ -50,6 +50,10 @@
       }
     }
 
+    if (stat(tPluginDir) === null) {
+      return;
+    }
+
     var tFiles = global.system('find ' + tPluginDir + ' -type f -name \'*.js\'')
       .split(/\n/);
 
