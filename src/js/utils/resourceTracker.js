@@ -7,23 +7,12 @@
   global.util.resourceTracker = {
 
     trackAndProcess : function(pResources, pNoTrack) {
-      var prev;
-      pResources.sort(function (a, b) {
-          if (a.file < b.file) {
-            return -1;
-          } else if (a.file > b.file) {
-            return 1;
-          }
-          return 0;
-        });
-
+      // Removing redundancy with preserving order.
       return pResources.filter(function (e) {
-          if (e.file === prev 
-            || (pNoTrack ? false
-              : e.file in mProcessedResources[mStack.current()])) {
+          if (!pNoTrack &&
+              e.file in mProcessedResources[mStack.current()]) {
             return false;
           }
-          prev = e.file;
           pNoTrack || (mProcessedResources[mStack.current()][e.file] = true);
           return true;
         });
