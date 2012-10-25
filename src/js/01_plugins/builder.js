@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -25,13 +25,6 @@
     setData: function(pData) {},
 
     /**
-     * Called by the system to pass the outputs resolved by ResourceHandlers.
-     * @param {Array.<string>} pOutputs An array of strings of outputs.
-     * @return {bool} Return false on failure. Anything else is a pass.
-     */
-    setOutputs: function(pOutputs) {},
-
-    /**
      * Called by the system to pass the resources resolved by ResourceHandlers.
      * Please see ResourceHandler for a description of the format of resources.
      * @param {Array.<Object>} pResources
@@ -40,13 +33,10 @@
     setResources: function(pResources) {},
 
     /**
-     * Called by the system do a dry build (run with --dry).
-     * This function should not output any files and should attempt
-     * to return the list of files that it would have outputted if
-     * it was a real build.
-     * @return {Array.<string>} The list of would-be outputted files.
+     * Called by the system to get the outputs resolved by this Builder.
+     * @return {Array.<Object>} The list of files that would be outputted.
      */
-    buildDry: function() {},
+    getOutputs: function() {},
 
     /**
      * Called to actually build the target.

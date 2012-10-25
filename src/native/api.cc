@@ -58,6 +58,8 @@ Persistent<Context> sCreateContext() {
 
   tGlobal->Set(String::New("unsetenv"), FunctionTemplate::New(sUnsetenv));
 
+  tGlobal->Set(String::New("realpath"), FunctionTemplate::New(sRealpath));
+
   return Context::New(NULL, tGlobal);
 }
 
@@ -352,6 +354,24 @@ Handle<Value> sUnsetenv(const Arguments &pArgs) {
   }
 
   return Undefined();
+}
+
+Handle<Value> sRealpath(const Arguments &pArgs) {
+  if (pArgs.Length() != 1) {
+    return ThrowException(String::New("Need 1 argument"));
+  }
+
+  String::Utf8Value tName(pArgs[0]);
+
+  char tResolvedName[PATH_MAX + 1];
+
+  if (realpath(*tName, tResolvedName) == NULL) {
+    return ThrowException(String::New("Invalid path to realpath"));
+  }
+
+  Handle<String> tResult = String::New(tResolvedName);
+
+  return tResult;
 }
 
 

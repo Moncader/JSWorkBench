@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -39,31 +39,13 @@
   };
 
   TargetsResourceHandler.prototype.getResources = function() {
-    var tResources = new Array(),
-      getDest = function (pSrc, pPrefix) {
-          var tIndex = pSrc.lastIndexOf('/') + 1;
-          return pSrc.slice(0, tIndex) + pPrefix + pSrc.slice(tIndex);
-        };
+    var tResources = new Array();
 
     for (var i = 0, il = this.targets.length; i < il; i++) {
-      print('Building dependency\n');
+      if (!this.config.isQuiet) print('Building dependency\n');
+
       var tTarget = this.config.targets[this.targets[i]];
-      var tOutputs = this.config.workbench.runAction('build', [tTarget.id]);
-      for (var j = 0, jl = tOutputs.length; j < jl; j++) {
-        if (tOutputs[j].skipped !== true 
-          && global.stat(tOutputs[j])) {
-          // Renaming is required here because closuer-compiler doesn't allow input and output files to have the same name.
-          var tSrc = tOutputs[j];
-          var tDest = getDest(tSrc, tTarget.id + '_');
-          while (global.stat(tDest)) {
-            tDest = getDest(tDest, '_');
-          }
-          global.system('mv ' + tSrc + ' ' + tDest);
-          print('mv ' + tSrc + ' ' + tDest);
-          tResources.push({file: tDest});
-          global.util.resourceTracker.clear(tDest);
-        }
-      }
+      tResources = tResources.concat(this.config.workbench.runAction('build', [tTarget.id]));
     }
 
     return tResources;

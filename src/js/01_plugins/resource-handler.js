@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -42,15 +42,6 @@
      */
     getResources: function() {
       return new Array();
-    },
-
-    /**
-     * To avoid redundancy, duplicate resources are ignored.
-     * However, it is sometime useful to limit the range of the checking to a certain namespace.
-     * If the overridden method returns true, the redundancy check is done per workspace.
- .    */
-    needSeparateNamespace: function () { 
-      return false; 
     }
   };
 

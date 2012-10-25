@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -12,7 +12,7 @@
   var chdir = global.chdir;
 
   global.plugins.RemoteResourceHandler = RemoteResourceHandler;
-  
+
   var FileResourceHandler = global.plugins.FileResourceHandler;
 
   function RemoteResourceHandler(pConfig) {
@@ -51,9 +51,6 @@
 
     var tHandler = new tLocationHandlers[tLocation](this.config);
     tHandler.setData(this.workspace + '/remote', this.data);
-    if ((this.hasBeenBuilt = tHandler.hasBeenBuilt()) === true) {
-      return true;
-    }
     return tHandler.execute();
   };
 

@@ -50,6 +50,8 @@ Handle<Value> sGetenv(const Arguments &pArgs);
 
 Handle<Value> sUnsetenv(const Arguments &pArgs);
 
+Handle<Value> sRealpath(const Arguments &pArgs);
+
 
 Handle<Value> sReadFile(const char *pName);
 

@@ -11,26 +11,6 @@
 
   global.on('registerActions', function(pActions) {
 
-    function generateOutputs(pConfig, pOutputs, pInputs) {
-      var tNewOutputs = new Array();
-      var tEditedOutput = false;
-
-      for (var i = 0, il = pInputs.length; i < il; i++) {
-        var tOutputCaptures = pInputs[i].outputCaptures;
-        if (tOutputCaptures) {
-          tEditedOutput = true;
-          var tNewOutputEntry = pOutputs;
-          for (var j = 0, jl = tOutputCaptures.length; j < jl; j++) {
-            tNewOutputEntry = tNewOutputEntry.replace(new RegExp('\\$' + (j + 1), 'g'), tOutputCaptures[j]);
-          }
-
-          tNewOutputs.push(pConfig.expand(tNewOutputEntry));
-        }
-      }
-
-      return tEditedOutput === true ? tNewOutputs : [pConfig.expand(pOutputs)];
-    }
-
     function buildTarget(pTarget, pConfig) {
       pConfig.properties.targetId = pTarget.id;
       var tTargetName = pConfig.properties.target;
@@ -113,57 +93,59 @@
           }
         }
 
-        var tSeparateNamespace = tResourceHandler.needSeparateNamespace();
+        /*var tSeparateNamespace = tResourceHandler.needSeparateNamespace();
         var resourceTracker = global.util.resourceTracker;
         if (tSeparateNamespace) {
           resourceTracker.push(tWorkspace);
-        }
+        }*/
 
         var tPartialResourceList = tResourceHandler.getResources();
         for (var j = 0, jl = tPartialResourceList.length; j < jl; j++) {
           tPartialResourceList[j].resourceIndex = i;
         }
-        tPartialResourceList = resourceTracker.trackAndProcess(tPartialResourceList);
+        /*tPartialResourceList = resourceTracker.trackAndProcess(tPartialResourceList);
         if (tSeparateNamespace) {
           resourceTracker.pop();
-        }
+        }*/
 
         tResourceList = tResourceList.concat(tPartialResourceList);
       }
 
-      var tOutputs = generateOutputs(pConfig, pTarget.outputs, tResourceList);
-
-      if (tResourceList.length === 0) {
+      /*if (tResourceList.length === 0) {
         if (!pConfig.isQuiet) print('Skipping target ' + pTarget.id + ' (' + tTargetName + ') to avoid redundancy.');
         return [pConfig.expand(pTarget.outputs)];
       }
       tResourceList = resourceTracker.trackAndProcess(tResourceList, true);
-
+      */
       if (tBuilder.setData(pTarget) === false) {
         throw new Error('Setting data for builder failed.');
-      }
-
-      if (tBuilder.setOutputs(tOutputs) === false) {
-        throw new Error('Setting outputs for builder failed.');
       }
 
       if (tBuilder.setResources(tResourceList) === false) {
         throw new Error('Setting resources for builder failed.');
       }
 
-      var tFinalOutputs;
+      var tOutputs;
 
-      if ((tFinalOutputs = (pConfig.isDry ? tBuilder.buildDry() : tBuilder.build())) === false) {
+      if ((tOutputs = (pConfig.isDry ? tBuilder.getOutputs() : tBuilder.build())) === false) {
         throw new Error('Building target ' + pTarget.id + ' (' + tTargetName + ') failed.');
       }
 
       if (!pConfig.isQuiet) print('Finished building target ' + pTarget.id + ' (' + tTargetName + ').');
 
-      return tFinalOutputs;
+      return tOutputs;
     }
 
-    pActions.build = function(pConfig, pTarget) {
-      if (!pTarget) {
+    pActions.build = function(pConfig) {
+      var tArguments = Array.prototype.slice.call(arguments, 1)
+            .filter(function(pArg) {
+              if (pArg[0] !== '-') {
+                return true;
+              }
+              return false;
+            });
+
+      if (tArguments.length === 0) {
         if (typeof pConfig.raw.defaultTarget === 'string') {
           return pActions.build(pConfig, pConfig.raw.defaultTarget);
         }
@@ -173,26 +155,30 @@
 
         return null;
       } else {
-        var tTargets = pConfig.targets;
-        var tGotOne = false;
         var tOutputs = new Array();
-        for (var k in tTargets) {
-          var tResult = tTargets[k].regex.exec(pTarget);
-          if (tResult) {
-            tGotOne = true;
-            pConfig.properties.target = pTarget;
-            for (var i = 1, il = tResult.length; i < il; i++) {
-              pConfig.properties['target.' + i] = tResult[i];
+        var tTargets = pConfig.targets;
+
+        for (var i = 0, il = tArguments.length; i < il; i++) {
+          var tTarget = tArguments[i];
+          var tGotOne = false;
+          for (var k in tTargets) {
+            var tResult = tTargets[k].regex.exec(tTarget);
+            if (tResult) {
+              tGotOne = true;
+              pConfig.properties.target = tTarget;
+              for (var j = 1, jl = tResult.length; j < jl; j++) {
+                pConfig.properties['target.' + j] = tResult[j];
+              }
+              tOutputs = tOutputs.concat(buildTarget(tTargets[k], pConfig));
             }
-            tOutputs = tOutputs.concat(buildTarget(tTargets[k], pConfig));
+          }
+          if (tGotOne === false) {
+            print('The target ' + tTarget + ' did not have any matches. Valid targets are:');
+            pConfig.printTargets();
           }
         }
-        if (tGotOne === false) {
-          print('The target ' + pTarget + ' did not have any matches. Valid targets are:');
-          pConfig.printTargets();
-        } else {
-          return tOutputs;
-        }
+
+        return tOutputs;
       }
 
       return null;

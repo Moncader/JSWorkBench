@@ -31,32 +31,26 @@
 
   ClosureCompilerBuilder.prototype.setData = function(pData) {
     var tData = this.data;
+    if (tData.outputs) {
+      this.output = pData.outputs;
+    }
     if (pData.strict !== void 0) tData.strict = pData.strict;
     if (pData.extraArgs !== void 0) tData.extraArgs = pData.extraArgs;
     if (pData.compilationLevel !== void 0) tData.compilationLevel = pData.compilationLevel;
   };
 
-  ClosureCompilerBuilder.prototype.setOutputs = function(pOutputs) {
-    this.output = new Array(pOutputs.length);
-    for (var i = 0, il = pOutputs.length; i < il; i++) {
-      this.output[i] = pOutputs[i];
-    }
+  ClosureCompilerBuilder.prototype.getOutputs = function() {
+    return [this.output];
   };
 
   ClosureCompilerBuilder.prototype.setResources = function(pResources) {
     this.resources.length = 0;
 
-    if (this.output.length === 1) {
-      pResources = global.util.resolveJavaScriptFileOrder(pResources, this.config.isQuiet);
-    }
+    pResources = global.util.resolveJavaScriptFileOrder(pResources, this.config.isQuiet);
 
     for (var i = 0, il = pResources.length; i < il; i++) {
       this.resources[i] = pResources[i].file;
     }
-  };
-
-  ClosureCompilerBuilder.prototype.buildDry = function() {
-    return this.output;
   };
 
   ClosureCompilerBuilder.prototype.build = function() {
@@ -97,29 +91,13 @@
       if (!self.config.isQuiet) print(tStdout);
     }
 
-    for (var i = 0, il = this.output.length; i < il; i++) {
-    }
-
-
-    if (this.output.length === 1) {
-      if (global.stat(this.output[0])) {
-        if (!global.util.outputNeedsUpdate(this.output[0], this.resources)) {
-          this.output[0].skipped = true;
-          return this.output;
-        }
-      }
-      execute(tCmdLine, this.output[0], this.resources.join(' '));
-    } else {
-      for (var i = 0, il = this.output.length; i < il; i++) {
-        if (global.stat(this.output[i])) {
-          if (!global.util.outputNeedsUpdate(this.output[i], [this.resources[i]])) {
-            this.output[i].skipped = true;
-            continue;
-          }
-        }
-        execute(tCmdLine, this.output[i], this.resources[i]);
+    if (global.stat(this.output)) {
+      if (!global.util.outputNeedsUpdate(this.output, this.resources)) {
+        this.output.skipped = true;
+        return this.output;
       }
     }
+    execute(tCmdLine, this.output, this.resources.join(' '));
 
     return this.output;
   };
