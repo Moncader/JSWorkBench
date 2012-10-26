@@ -45,7 +45,13 @@
       if (!this.config.isQuiet) print('Building dependency\n');
 
       var tTarget = this.config.targets[this.targets[i]];
-      tResources = tResources.concat(this.config.workbench.runAction('build', [tTarget.id]));
+      var tBuildOutputs = this.config.workbench.runAction('build', [tTarget.id]);
+
+      for (var j = 0, jl = tBuildOutputs.length; j < jl; j++) {
+        tResources.push({
+          file: tBuildOutputs[j]
+        });
+      }
     }
 
     return tResources;

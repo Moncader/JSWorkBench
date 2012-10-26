@@ -31,8 +31,8 @@
 
   ClosureCompilerBuilder.prototype.setData = function(pData) {
     var tData = this.data;
-    if (tData.outputs) {
-      this.output = pData.outputs;
+    if (pData.outputs) {
+      this.output = this.config.expand(pData.outputs);
     }
     if (pData.strict !== void 0) tData.strict = pData.strict;
     if (pData.extraArgs !== void 0) tData.extraArgs = pData.extraArgs;
