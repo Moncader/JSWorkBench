@@ -344,7 +344,7 @@ Handle<Value> sGetenv(const Arguments &pArgs) {
 
 Handle<Value> sUnsetenv(const Arguments &pArgs) {
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Need 1 argument1"));
+    return ThrowException(String::New("Need 1 argument"));
   }
 
   String::Utf8Value tName(pArgs[0]);
@@ -364,7 +364,6 @@ Handle<Value> sRealpath(const Arguments &pArgs) {
   String::Utf8Value tName(pArgs[0]);
 
   char tResolvedName[PATH_MAX + 1];
-
   if (realpath(*tName, tResolvedName) == NULL) {
     return ThrowException(String::New("Invalid path to realpath"));
   }

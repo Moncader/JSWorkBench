@@ -12,6 +12,8 @@
 
   global.plugins.ClosureCompilerBuilder = ClosureCompilerBuilder;
 
+  var mJarFileCache = null;
+
   /**
    * @constructor
    * @lends {plugins.Builder}
@@ -51,6 +53,14 @@
     for (var i = 0, il = pResources.length; i < il; i++) {
       this.resources[i] = pResources[i].file;
     }
+
+    if (!this.output) {
+      if (this.resources.length === 1) {
+        this.output = (this.config.properties.binDir || 'bin') + '/' + this.resources[0].replace(/\.js$/, '.min.js');
+      } else {
+        this.output = this.config.expand('${binDir}/${target}.js');
+      }
+    }
   };
 
   ClosureCompilerBuilder.prototype.build = function() {
@@ -58,13 +68,21 @@
       (this.config.properties.vendorDir || 'vendor') + '/google-closure-compiler/compiler.jar';
 
     if (global.stat(tJarFile) === null) {
-      if (!this.config.isQuiet) print('Downloading Google Closure Compiler...');
-      var tOutput = system('curl http://closure-compiler.googlecode.com/files/compiler-latest.zip -o compiler-latest.zip && unzip compiler-latest.zip compiler.jar && rm compiler-latest.zip && mkdir -p $(dirname ' + tJarFile + ') && mv compiler.jar ' + tJarFile);
-      if (!this.config.isQuiet) print(tOutput);
-      if (global.stat(tJarFile) === null) {
-        print('Could not download the closure compiler. Aborting.');
-        return false;
+      if (mJarFileCache !== null) {
+        tJarFile = mJarFileCache;
+      } else {
+        if (!this.config.isQuiet) print('Downloading Google Closure Compiler...');
+        var tOutput = system('curl http://closure-compiler.googlecode.com/files/compiler-latest.zip -o compiler-latest.zip && unzip compiler-latest.zip compiler.jar && rm compiler-latest.zip && mkdir -p $(dirname ' + tJarFile + ') && mv compiler.jar ' + tJarFile);
+        if (!this.config.isQuiet) print(tOutput);
+        if (global.stat(tJarFile) === null) {
+          print('Could not download the closure compiler. Aborting.');
+          return false;
+        }
+
+        mJarFileCache = global.realpath(tJarFile);
       }
+    } else if (mJarFileCache === null) {
+      mJarFileCache = global.realpath(tJarFile);
     }
 
     var tCmdLine = [
