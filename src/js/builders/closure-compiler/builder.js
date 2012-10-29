@@ -112,12 +112,12 @@
     if (global.stat(this.output)) {
       if (!global.util.outputNeedsUpdate(this.output, this.resources)) {
         this.output.skipped = true;
-        return this.output;
+        return [this.output];
       }
     }
     execute(tCmdLine, this.output, this.resources.join(' '));
 
-    return this.output;
+    return [this.output];
   };
 
   global.on('queryBuilders', function(pBuilders) {

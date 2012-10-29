@@ -18,6 +18,16 @@
       if (!pConfig.isQuiet) print('Building target ' + pTarget.id + ' (' + tTargetName + ')...');
 
       var tBuilderType = pTarget.builder || pConfig.properties.defaultBuilder;
+
+      if (!tBuilderType) {
+        if (pTarget.depends) {
+          return [];
+        } else {
+          print('No Builder was specified for the target ' + tTargetName + '.');
+          return;
+        }
+      }
+
       var tBuilders = new Object();
 
       global.fire('queryBuilders', tBuilders);
@@ -93,30 +103,14 @@
           }
         }
 
-        /*var tSeparateNamespace = tResourceHandler.needSeparateNamespace();
-        var resourceTracker = global.util.resourceTracker;
-        if (tSeparateNamespace) {
-          resourceTracker.push(tWorkspace);
-        }*/
-
         var tPartialResourceList = tResourceHandler.getResources();
         for (var j = 0, jl = tPartialResourceList.length; j < jl; j++) {
           tPartialResourceList[j].resourceIndex = i;
         }
-        /*tPartialResourceList = resourceTracker.trackAndProcess(tPartialResourceList);
-        if (tSeparateNamespace) {
-          resourceTracker.pop();
-        }*/
 
         tResourceList = tResourceList.concat(tPartialResourceList);
       }
 
-      /*if (tResourceList.length === 0) {
-        if (!pConfig.isQuiet) print('Skipping target ' + pTarget.id + ' (' + tTargetName + ') to avoid redundancy.');
-        return [pConfig.expand(pTarget.outputs)];
-      }
-      tResourceList = resourceTracker.trackAndProcess(tResourceList, true);
-      */
       if (tBuilder.setData(pTarget) === false) {
         throw new Error('Setting data for builder failed.');
       }
@@ -133,14 +127,20 @@
 
       if (!pConfig.isQuiet) print('Finished building target ' + pTarget.id + ' (' + tTargetName + ').');
 
+      global.util.outputTracker.track(tOutputs);
+
       return tOutputs;
     }
 
     pActions.build = function(pConfig) {
+      var tFirstOnly = false;
+
       var tArguments = Array.prototype.slice.call(arguments, 1)
             .filter(function(pArg) {
               if (pArg[0] !== '-') {
                 return true;
+              } else if (pArg === '--first-only') {
+                tFirstOnly = true;
               }
               return false;
             });
@@ -157,19 +157,31 @@
       } else {
         var tOutputs = new Array();
         var tTargets = pConfig.targets;
-
         for (var i = 0, il = tArguments.length; i < il; i++) {
           var tTarget = tArguments[i];
           var tGotOne = false;
           for (var k in tTargets) {
-            var tResult = tTargets[k].regex.exec(tTarget);
+            var tTargetData = tTargets[k];
+            var tResult = tTargetData.regex.exec(tTarget);
             if (tResult) {
               tGotOne = true;
+
+              if (tTargetData.depends) {
+                var tDepends = tTargetData.depends;
+                for (var j = 0, jl = tDepends.length; j < jl; j++) {
+                  tOutputs = tOutputs.concat(pActions.build(pConfig, tDepends[j], '--first-only'));
+                }
+              }
+
               pConfig.properties.target = tTarget;
               for (var j = 1, jl = tResult.length; j < jl; j++) {
                 pConfig.properties['target.' + j] = tResult[j];
               }
-              tOutputs = tOutputs.concat(buildTarget(tTargets[k], pConfig));
+              tOutputs = tOutputs.concat(buildTarget(tTargetData, pConfig));
+
+              if (tFirstOnly) {
+                break; // continue to next defined target. Don't continue matching this one.
+              }
             }
           }
           if (tGotOne === false) {
