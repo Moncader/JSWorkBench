@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <limits.h>
 
 #include <v8.h>
 #include "api.h"
