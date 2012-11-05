@@ -64,6 +64,10 @@
   };
 
   ClosureCompilerBuilder.prototype.build = function() {
+    if (this.resources.length === 0) {
+      return [];
+    }
+
     var tJarFile = this.config.properties['closure-compiler-jar'] ||
       (this.config.properties.vendorDir || 'vendor') + '/google-closure-compiler/compiler.jar';
 

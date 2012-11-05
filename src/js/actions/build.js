@@ -28,6 +28,11 @@
         }
       }
 
+      var tResources = pTarget.resources;
+      if (!tResources) {
+        tResources = [];
+      }
+
       var tBuilders = new Object();
 
       global.fire('queryBuilders', tBuilders);
@@ -46,7 +51,6 @@
 
       global.fire('queryResourceHandlers', tResourceHandlers);
 
-      var tResources = pTarget.resources;
       var tResourceList = new Array();
 
       var tGlobalResources = pConfig.resources;
@@ -169,7 +173,7 @@
               if (tTargetData.depends) {
                 var tDepends = tTargetData.depends;
                 for (var j = 0, jl = tDepends.length; j < jl; j++) {
-                  tOutputs = tOutputs.concat(pActions.build(pConfig, tDepends[j], '--first-only'));
+                  pActions.build(pConfig, tDepends[j], '--first-only');
                 }
               }
 

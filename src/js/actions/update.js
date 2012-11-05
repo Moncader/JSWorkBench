@@ -6,11 +6,14 @@
 
     if (!pConfig.isQuiet) print('Updating target ' + pTarget.id + ' (' + tTargetName + ')...');
 
+    var tResources = pTarget.resources;
+    if (!tResources) {
+      tResources = [];
+    }
+
     var tResourceHandlers = new Object();
 
     global.fire('queryResourceHandlers', tResourceHandlers);
-
-    var tResources = pTarget.resources;
 
     var tGlobalResources = pConfig.resources;
 
@@ -66,39 +69,64 @@
     if (!pConfig.isQuiet) print('Finished updating target ' + pTarget.id + ' (' + tTargetName + ').');
   }
 
-  function updateAction(pConfig, pTarget) {
-    if (!pTarget) {
-      if (typeof pConfig.raw.defaultTarget === 'string') {
-        updateAction(pConfig, pConfig.raw.defaultTarget);
-        return;
-      }
+  global.on('registerActions', function(pActions) {
+    pActions.update = function updateAction(pConfig) {
+      var tFirstOnly = false;
 
-      print('Please select a target. Valid targets are:');
-      pConfig.printTargets();
-    } else {
-      var tTargets = pConfig.targets;
-      var tGotOne = false;
-      var tOutputs = new Array();
-      for (var k in tTargets) {
-        var tResult = tTargets[k].regex.exec(pTarget);
-        if (tResult) {
-          tGotOne = true;
-          pConfig.properties.target = pTarget;
-          for (var i = 1, il = tResult.length; i < il; i++) {
-            pConfig.properties['target.' + i] = tResult[i];
+      var tArguments = Array.prototype.slice.call(arguments, 1)
+            .filter(function(pArg) {
+              if (pArg[0] !== '-') {
+                return true;
+              } else if (pArg === '--first-only') {
+                tFirstOnly = true;
+              }
+              return false;
+            });
+
+      if (tArguments.length === 0) {
+        if (typeof pConfig.raw.defaultTarget === 'string') {
+          updateAction(pConfig, pConfig.raw.defaultTarget);
+          return;
+        }
+
+        print('Please select a target. Valid targets are:');
+        pConfig.printTargets();
+      } else {
+        var tTargets = pConfig.targets;
+        for (var i = 0, il = tArguments.length; i < il; i++) {
+          var tTarget = tArguments[i];
+          var tGotOne = false;
+          for (var k in tTargets) {
+            var tTargetData = tTargets[k];
+            var tResult = tTargetData.regex.exec(tTarget);
+            if (tResult) {
+              tGotOne = true;
+
+              if (tTargetData.depends) {
+                var tDepends = tTargetData.depends;
+                for (var j = 0, jl = tDepends.length; j < jl; j++) {
+                  pActions.update(pConfig, tDepends[j], '--first-only');
+                }
+              }
+
+              pConfig.properties.target = tTarget;
+              for (var i = 1, il = tResult.length; i < il; i++) {
+                pConfig.properties['target.' + i] = tResult[i];
+              }
+              update(tTargetData, pConfig);
+
+              if (tFirstOnly) {
+                break; // continue to next defined target. Don't continue matching this one.
+              }
+            }
           }
-          update(tTargets[k], pConfig);
+          if (tGotOne === false) {
+            print('The target ' + tTarget + ' did not have any matches. Valid targets are:');
+            pConfig.printTargets();
+          }
         }
       }
-      if (tGotOne === false) {
-        print('The target ' + pTarget + ' did not have any matches. Valid targets are:');
-        pConfig.printTargets();
-      }
-    }
-  }
-
-  global.on('registerActions', function(pActions) {
-    pActions.update = updateAction;
+    };
   });
 
 }(this));
