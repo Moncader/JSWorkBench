@@ -20,6 +20,7 @@
     this.workspace = '';
     this.config = pConfig;
     this.hasBeenBuilt = false;
+    this.baseRoot = '';
   }
 
   RemoteResourceHandler.prototype = new FileResourceHandler();
@@ -31,8 +32,9 @@
       throw new Error('remote type needs to have a "location" setting.');
     }
     this.data = pData;
-    this.workspace = pWorkspace;
-    this.root = pWorkspace + '/remote/' + this.root;
+    this.workspace = pWorkspace + '/remote';
+    this.baseRoot = this.root;
+    this.root = this.workspace + '/' + this.baseRoot;
   };
 
   RemoteResourceHandler.prototype.prepare = function() {
@@ -50,7 +52,13 @@
     }
 
     var tHandler = new tLocationHandlers[tLocation](this.config);
-    tHandler.setData(this.workspace + '/remote', this.data);
+    var tResult = tHandler.setData(this.workspace, this.data);
+    if (tResult === false) {
+      throw new Error('Failed to set data of remote.');
+    } else if (typeof tResult === 'string') {
+      this.workspace = tResult;
+      this.root = this.workspace + '/' + this.baseRoot;
+    }
     return tHandler.execute();
   };
 

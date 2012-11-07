@@ -57,24 +57,37 @@
 
       for (var i = 0, il = tResources.length; i < il; i++) {
         var tResource = tResources[i];
+        var tResourceName = tResource.name;
         var tResourceId;
+        var tResourceOverriden = false;
+        var k;
         if (tResource.type === 'reference') {
-          if (!tResource.name) {
+          if (!tResourceName) {
             print('The name of the reference needs to be specified.');
             return;
           }
-          if (!(tResource.name in tGlobalResources)) {
-            print('The given resource "' + tResource.name + '" does not exist.');
+          if (!(tResourceName in tGlobalResources)) {
+            print('The given resource "' + tResourceName + '" does not exist.');
             return;
           }
-          tResourceId = tResource.name;
-          var tNewResource = tGlobalResources[tResource.name];
-          for (var k in tResource) {
+
+          tResourceId = tResourceName;
+
+          var tNewResource = JSON.parse(JSON.stringify(tGlobalResources[tResourceName]));
+          for (k in tResource) {
             if (k !== 'type' && k !== 'name') {
               tNewResource[k] = tResource[k];
             }
           }
           tResource = tNewResource;
+
+          if (pConfig.locals.resources && (tResourceName in pConfig.locals.resources)) {
+            tResourceOverriden = true;
+            tNewResource = JSON.parse(JSON.stringify(pConfig.locals.resources[tResourceName]));
+            for (k in tNewResource) {
+              tResource[k] = tNewResource[k];
+            }
+          }
         } else {
           tResourceId = tTargetName + '__resource_' + i;
         }
@@ -92,7 +105,7 @@
         var tWorkspace = (pConfig.properties.buildDir || 'build') +
               '/' + tResourceId;
 
-        var tNeedsPrepare = false;
+        var tNeedsPrepare = tResourceOverriden;
         if (global.stat(tWorkspace) === null) {
           tNeedsPrepare = true;
           system("mkdir -p '" + tWorkspace + "'");

@@ -28,7 +28,7 @@
       throw new Error('package type needs to have a "location" setting.');
     }
     this.data = pData;
-    this.workspace = pWorkspace;
+    this.workspace = pWorkspace + '/package';
   };
 
   PackageResourceHandler.prototype.prepare = function() {
@@ -45,14 +45,21 @@
       return false;
     }
 
+    var tOverriden = false;
     var tHandler = new tLocationHandlers[tLocation](this.config);
-    tHandler.setData(this.workspace + '/package', this.data);
+    var tResult = tHandler.setData(this.workspace, this.data);
+    if (tResult === false) {
+      throw new Error('Failed to set data of package.');
+    } else if (typeof tResult === 'string') {
+      tOverriden = true;
+      this.workspace = tResult;
+    }
     if (tHandler.execute() === false) {
       return false;
     }
 
     var tCurrentWorkingDirectory = getcwd();
-    chdir(this.workspace + '/package');
+    chdir(this.workspace);
 
     var tPackageWorkBench = new WorkBench();
     if (!tPackageWorkBench.load(this.data.buildFile)) {
@@ -62,13 +69,15 @@
     tPackageConfig.isDry = this.config.isDry;
     tPackageConfig.isQuiet = this.config.isQuiet;
 
-    if (this.data.targets) {
-      var tTargets = this.data.targets;
-      for (var i = 0, il = tTargets.length; i < il; i++) {
-        tPackageWorkBench.runAction('update', [tTargets[i]]);
+    if (tOverriden === false) {
+      if (this.data.targets) {
+        var tTargets = this.data.targets;
+        for (var i = 0, il = tTargets.length; i < il; i++) {
+          tPackageWorkBench.runAction('update', [tTargets[i]]);
+        }
+      } else {
+        tPackageWorkBench.runAction('update', [this.data.target]);
       }
-    } else {
-      tPackageWorkBench.runAction('update', [this.data.target]);
     }
 
     chdir(tCurrentWorkingDirectory);
@@ -82,7 +91,7 @@
     }
 
     var tCurrentWorkingDirectory = getcwd();
-    chdir(this.workspace + '/package');
+    chdir(this.workspace);
 
     var tPackageWorkBench = new WorkBench();
     if (!tPackageWorkBench.load(this.data.buildFile)) {
@@ -100,7 +109,7 @@
         var tOutputs = tPackageWorkBench.runAction('build', [tTargets[i]]);
         for (var k = 0, kl = tOutputs.length; k < kl; k++) {
           tResources.push({
-            file: this.workspace + '/package/' + tOutputs[k]
+            file: this.workspace + '/' + tOutputs[k]
           });
         }
       }
@@ -108,7 +117,7 @@
       var tOutputs = tPackageWorkBench.runAction('build', [this.data.target]);
       for (var k = 0, kl = tOutputs.length; k < kl; k++) {
         tResources.push({
-          file: this.workspace + '/package/' + tOutputs[k]
+          file: this.workspace + '/' + tOutputs[k]
         });
       }
     }

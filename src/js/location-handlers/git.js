@@ -17,8 +17,6 @@
     this.branch = 'master';
     this.root = '';
     this.config = pConfig;
-    this.target = null;
-    this.targets = null;
   };
 
   GitHandler.prototype = new global.plugins.LocationHandler();
@@ -29,8 +27,6 @@
     if ('branch' in pData) {
       this.branch = pData.branch;
     }
-    this.target = pData.target;
-    this.targets = pData.targets;
   };
 
   GitHandler.prototype.execute = function() {

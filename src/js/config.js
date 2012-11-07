@@ -125,14 +125,30 @@
     }
 
     var tLocalConfig = '.jsworkbenchrc';
+    var tLocalConfigContents;
+    var tLocalConfigData = tConfig.locals;
+    var tHome = global.getenv('HOME');
+
+    if (tHome) {
+      try {
+        tLocalConfigContents = JSON.parse(read(tHome + '/.jsworkbenchrc'));
+        for (k in tLocalConfigContents) {
+          tLocalConfigData[k] = tLocalConfigContents[k];
+        }
+      } catch (e) {
+        // we don't care.
+      }
+    }
 
     if (tConfigJSON.properties.localConfigFile) {
       tLocalConfig = tConfigJSON.properties.localConfigFile;
     }
 
     try {
-      var tLocalConfigContents = JSON.parse(read(tLocalConfig));
-      tConfig.locals = tLocalConfigContents;
+      tLocalConfigContents = JSON.parse(read(tLocalConfig));
+      for (k in tLocalConfigContents) {
+        tLocalConfigData[k] = tLocalConfigContents[k];
+      }
     } catch (e) {
       // we don't care.
     }
