@@ -154,6 +154,10 @@
 
       var tArguments = Array.prototype.slice.call(arguments, 1)
             .filter(function(pArg) {
+              if (!pArg) {
+                return false;
+              }
+
               if (pArg[0] !== '-') {
                 return true;
               } else if (pArg === '--first-only') {
