@@ -144,7 +144,11 @@
 
       if (!pConfig.isQuiet) print('Finished building target ' + pTarget.id + ' (' + tTargetName + ').');
 
-      global.util.outputTracker.track(tOutputs);
+      pConfig.outputTracker.track(tOutputs);
+
+      if (pTarget.module === true) {
+        return [];
+      }
 
       return tOutputs;
     }

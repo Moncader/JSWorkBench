@@ -2,48 +2,51 @@
 
   var realpath = global.realpath;
 
-  var mTrackedOutputs = {};
+  global.util.OutputTracker = OutputTracker;
 
-  global.util.outputTracker = {
+  function OutputTracker() {
+    this.trackedOutputs = {};
+  }
 
-    track: function(pOutputs) {
-      var tTracked;
-      var tPath;
-      var tOutput;
+  OutputTracker.prototype.track = function(pOutputs) {
+    var tTracked;
+    var tPath;
+    var tOutput;
+    var tTrackedOutputs = this.trackedOutputs;
 
-      for (var i = 0, il = pOutputs.length; i < il; i++) {
-        tOutput = pOutputs[i];
-        if (typeof tOutput === 'string') {
-          tPath = realpath(tOutput);
-        } else {
-          tPath = realpath(tOutput.file);
-        }
-        tTracked = mTrackedOutputs[tPath];
-        if (tTracked !== void 0) {
-          mTrackedOutputs[tPath]++;
-        } else {
-          mTrackedOutputs[tPath] = 1;
-        }
+    for (var i = 0, il = pOutputs.length; i < il; i++) {
+      tOutput = pOutputs[i];
+      if (typeof tOutput === 'string') {
+        tPath = realpath(tOutput);
+      } else {
+        tPath = realpath(tOutput.file);
       }
-    },
-
-    get: function(pFile) {
-      return mTrackedOutputs[realpath(pFile)] || 0;
-    },
-
-    getAll: function() {
-      var tOutputs = [];
-
-      for (var k in mTrackedOutputs) {
-        tOutputs.push(k);
+      tTracked = tTrackedOutputs[tPath];
+      if (tTracked !== void 0) {
+        tTrackedOutputs[tPath]++;
+      } else {
+        tTrackedOutputs[tPath] = 1;
       }
-
-      return tOutputs;
-    },
-
-    clear: function() {
-      mTrackedOutputs = {};
     }
+  };
+
+  OutputTracker.prototype.get = function(pFile) {
+    return this.trackedOutputs[realpath(pFile)] || 0;
+  };
+
+  OutputTracker.prototype.getAll = function() {
+    var tTrackedOutputs = this.trackedOutputs;
+    var tOutputs = [];
+
+    for (var k in tTrackedOutputs) {
+      tOutputs.push(k);
+    }
+
+    return tOutputs;
+  };
+
+  OutputTracker.prototype.clear = function() {
+    this.trackedOutputs = {};
   };
 
 }(this));

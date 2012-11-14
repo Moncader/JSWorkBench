@@ -10,7 +10,8 @@
   var print = global.print,
       args = global.args,
       write = global.write,
-      read = global.read;
+      read = global.read,
+      util = global.util;
 
   global.Config = Config;
 
@@ -24,6 +25,7 @@
     this.isQuiet = false;
     this.locals = {};
     this.plugins = {};
+    this.outputTracker = new util.OutputTracker();
   }
   Config.prototype = {
     /**

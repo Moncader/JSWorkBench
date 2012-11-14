@@ -50,7 +50,7 @@
     var tExcludes = this.excludes;
     var tExcludesLength = tExcludes.length;
     var tResources = [];
-    var tOutputs = global.util.outputTracker.getAll();
+    var tOutputs = this.config.outputTracker.getAll();
     var i, il;
 
     if (tIncludesLength > 0) {

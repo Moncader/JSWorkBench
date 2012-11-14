@@ -45,7 +45,7 @@
       if (!this.config.isQuiet) print('Building dependency\n');
 
       var tTarget = this.config.targets[this.targets[i]];
-      var tBuildOutputs = this.config.workbench.runAction('build', [tTarget.id]);
+      var tBuildOutputs = this.config.workbench.runAction('build', [tTarget.id, '--first-only']);
 
       for (var j = 0, jl = tBuildOutputs.length; j < jl; j++) {
         tResources.push({
