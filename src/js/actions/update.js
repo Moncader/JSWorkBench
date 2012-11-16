@@ -1,3 +1,10 @@
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
+ */
+
 (function(global) {
 
   function update(pTarget, pConfig) {
@@ -75,6 +82,10 @@
 
       var tArguments = Array.prototype.slice.call(arguments, 1)
             .filter(function(pArg) {
+              if (!pArg) {
+                return false;
+              }
+
               if (pArg[0] !== '-') {
                 return true;
               } else if (pArg === '--first-only') {

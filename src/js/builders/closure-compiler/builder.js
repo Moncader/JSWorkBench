@@ -46,11 +46,15 @@
   };
 
   ClosureCompilerBuilder.prototype.setResources = function(pResources) {
+    var tFile;
+
     this.resources.length = 0;
 
-    pResources = global.util.resolveJavaScriptFileOrder(pResources, this.config.isQuiet);
-
     for (var i = 0, il = pResources.length; i < il; i++) {
+      tFile = pResources[i].file;
+      if (stat(tFile) === null) {
+        throw Error('Resource for closure-compiler ' + tFile + ' does not exist. Aborting...');
+      }
       this.resources[i] = pResources[i].file;
     }
 
