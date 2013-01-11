@@ -14,7 +14,9 @@
    * @constructor
    * @param {Config} pConfig The config object to use.
    */
-  function Builder(pConfig) {}
+  function Builder(pConfig) {
+    this.config = pConfig;
+  }
 
   Builder.prototype = /** @lends {Builder.prototype} */ {
     /**
