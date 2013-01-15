@@ -115,7 +115,7 @@
 
           try {
             tAST = esprima.parse(tSource, {
-              postProcess: handleNode
+              //postProcess: handleNode
             });
           } catch (e) {
             print('Failed to parse ' + mFiles[i]);
@@ -124,22 +124,41 @@
             return false;
           }
 
+          var tState = new State({
+
+          });
+
+          print(mFiles[i]);
+          print('AST');
+          safePrint(tAST);
+          resolveAST(tAST, tState);
+          print('GLOBALS');
+          safePrint(tState.exportGlobal());
+          print('REQUIRES');
+          safePrint(tState.requires);
           //print(JSON.stringify(mScope, null, 2));
 
-          var tRequires = {};
-          var tNamespace = buildNamespace(mScope, [{}], tRequires);
+          /*var tRequires = {};
+          var tNamespace = {};
+          tNamespace['this'] = tNamespace;
+          var tNamespace = buildNamespace(mScope, [tNamespace], tRequires);
 
-          //print(JSON.stringify(tNamespace, null, 2));
-          //print(JSON.stringify(tRequires, null, 2));
+          print(mFiles[i]);
+          print('SCOPES');
+          safePrint(mScope);
+          print('NAMESPACES');
+          safePrint(tNamespace);
+          print('REQUIRES');
+          safePrint(tRequires);*/
 
           //print(JSON.stringify(tAST, null, 2));
 
-          tOutput += '\n' + global.read(mFiles[i]);
+          //tOutput += '\n' + global.read(mFiles[i]);
         }
 
-        global.system('mkdir -p $(dirname ' + tOutputFile + ')');
+        //global.system('mkdir -p $(dirname ' + tOutputFile + ')');
 
-        global.write(tOutputFile, tOutput);
+        //global.write(tOutputFile, tOutput);
 
         reset();
 
@@ -152,173 +171,347 @@
     return JSBuilder;
   })(plugins.Builder);
 
-  function findReference(pName, pScopeChain, pFindParent) {
-    var tScope;
-    var tParts = pName.split('.');
-    var i, j, jl;
-    var tReference = null;
+  /**
+   * @constructor
+   * @param {object} pGlobal The global namespace.
+   */
+  function State(pGlobal) {
+    pGlobal = new Value(pGlobal);
+    this.global = pGlobal;
+    this.requires = {};
 
-    for (i = pScopeChain.length - 1; i >= 0; i--) {
-      tScope = pScopeChain[i];
+    var tGlobalScope = new Scope(pGlobal, []);
+    tGlobalScope.members = pGlobal;
 
-      if (tParts[0] in tScope) {
-        tReference = tScope[tParts[0]];
+    this.scopes = [tGlobalScope];
+  }
 
-        for (j = 1, jl = tParts.length - (pFindParent ? 1 : 0); j < jl; j++) {
-          if (!tReference.hasOwnProperty(tParts[j])) {
-            return null;
+  State.prototype.exportGlobal = function() {
+    var tCache = [];
+    var tValueCache = [];
+
+    function exportObject(pObject) {
+      var tValue = pObject.value;
+      var tType = typeof tValue;
+      var tReturn;
+      var tIndex;
+
+      if (tType === 'undefined') {
+        return '__undefined__';
+      } else if (tValue === null) {
+        return null;
+      } else if (tType === 'object') {
+        if (tValue.__proto__ === Array.prototype) {
+          if ((tIndex = tCache.indexOf(tValue)) !== -1) {
+            return tValueCache[tIndex];
           }
 
-          tReference = tParts[j];
-        }
-      }
-    }
+          var tReturn = new Array(tValue.length);
 
-    return tReference;
-  }
+          tCache.push(tValue);
+          tValueCache.push(tReturn);
 
-  function requireNamespace(pName, pRequires, pRequireParent) {
-    var tParts = pName.split('.');
-
-    if (tParts.length > 1) {
-      pRequires[tParts.slice(0, tParts.length - (pRequireParent ? 1 : 0)).join('.')] = true;
-    }
-  }
-
-  function defineNamespace(pName, pRoot) {
-    var tParts = pName.split('.');
-
-    for (var i = 0, il = tParts.length; i < il; i++) {
-      pRoot = pRoot[tParts[i]] = (pRoot[tParts[i]] || {});
-    }
-  }
-
-  function buildNamespace(pScope, pScopeChain, pRequires) {
-    var tMembers = pScope.members;
-    var tAssigns = pScope.assigns;
-    var tScopes = pScope.scopes;
-    var tScopeObject = pScopeChain[pScopeChain.length - 1];
-    var tFirstReference, tSecondReference;
-    var i, il, k;
-
-    for (k in tMembers) {
-      tScopeObject[k] = {};
-
-      if (tMembers[k]) {
-        tFirstReference = findReference(tMembers[k], pScopeChain);
-        if (tFirstReference !== null) {
-          tScopeObject[k] = tFirstReference;
+          for (var i = 0, il = tValue.length; i < il; i++) {
+            tReturn[i] = exportObject(tValue[i]);
+          }
+          return tReturn;
         } else {
-          requireNamespace(tMembers[k], pRequires);
+          if ((tIndex = tCache.indexOf(tValue)) !== -1) {
+            return tValueCache[tIndex];
+          }
+
+          var tReturn = {};
+
+          tCache.push(tValue);
+          tValueCache.push(tReturn);
+
+          for (var k in tValue) {
+            tReturn[k] = exportObject(tValue[k]);
+          }
+          return tReturn;
         }
-      }
-    }
-
-    for (k in tAssigns) {
-      tFirstReference = findReference(k, pScopeChain, true);
-
-      if (tFirstReference === null) {
-        defineNamespace(k, pScopeChain[0]);
-        requireNamespace(k, pRequires, true);
-      }
-
-      if (tAssigns[k] === null) {
-        defineNamespace(k, pScopeChain[pScopeChain.length - 1]);
       } else {
-        tSecondReference = findReference(tAssigns[k], pScopeChain);
-
-        if (tSecondReference === null) {
-          requireNamespace(tAssigns[k], pRequires);
-          defineNamespace(tAssigns[k], pScopeChain[0]);
-        } else if (tFirstReference !== null) {
-          tFirstReference[k] = tSecondReference;
-        }
+        return tValue;
       }
     }
-
-    for (i = 0, il = tScopes.length; i < il; i++) {
-      pScopeChain.push({});
-      buildNamespace(tScopes[i], pScopeChain, pRequires);
-      pScopeChain.pop();
-    }
-
-    return pScopeChain[0];
-  }
-
-  function resolveNode(pNode) {
-    var tString = null;
-
-    switch (pNode.type) {
-      case 'Literal':
-        return null;
-      case 'Identifier':
-        tString = pNode.name;
-        break;
-      case 'MemberExpression':
-        if (pNode.computed === false) {
-          tString = resolveNode(pNode.object) + '.' + resolveNode(pNode.property);
-        } else {
-          tString = resolveNode(pNode.object);
-        }
-        break;
-    }
-
-    return tString;
-  }
-
-  var mScope = {
-    scopes: [],
-    members: {},
-    assigns: {},
-    refs: []
+    return exportObject(this.global);
   };
 
-  var mScopeStack = [];
-  var tPreviousDepth = 0;
+  State.prototype.require = function(pAST) {
+    this.requires[pAST] = true;
+  }
 
-  function handleNode(pNode) {
-    var tDepth = pNode.depth;
-    var tNewScope;
+  State.prototype.pushScope = function(pThisMember) {
+    this.scopes.push(new Scope(pThisMember, this.scopes.slice(0)));
+  };
 
-    if (tDepth > tPreviousDepth) {
-      tPreviousDepth = tDepth;
-      mScopeStack.push(mScope);
-      tNewScope = {
-        scopes: [],
-        members: {},
-        assigns: {},
-        refs: []
-      };
-      mScope.scopes.push(tNewScope);
-      mScope = tNewScope;
-    } else if (tDepth < tPreviousDepth) {
-      tPreviousDepth = tDepth;
-      mScope = mScopeStack.pop();
+  State.prototype.popScope = function() {
+    this.scopes.pop();
+  }
+
+  State.prototype.assign = function(pName, pValue) {
+    var tScopes = this.scopes;
+    var tMembers;
+    var i;
+
+    if (pName instanceof Value) {
+      pName = pName.value;
     }
 
-    switch (pNode.type) {
-      case 'MemberExpression':
-        mScope.refs.push(resolveNode(pNode));
+    this.scopes[this.scopes.length - 1].members.value[pName] = pValue;
+  };
+
+  State.prototype.resolve = function(pValue) {
+    var tScopes = this.scopes[this.scopes.length - 1].scopeChain;
+    var tScope;
+    var i;
+    var tName;
+
+    if (pValue instanceof Value) {
+      if (typeof pValue.value !== 'string') {
+        return pValue;
+      }
+      tName = pValue.value;
+    } else {
+      pValue = new Value(pValue);
+    }
+
+    for (i = tScopes.length - 1; i >= 0; i--) {
+      tScope = tScopes[i];
+      if (tScope.members.value.hasOwnProperty(tName)) {
+        return tScope.members.value[tName];
+      }
+    }
+
+    pValue.isSet = false;
+
+    return pValue;
+  };
+
+  State.prototype.setReturn = function(pValue) {
+    this.scopes[this.scopes.length - 1].returnValue = pValue;
+  };
+
+  State.prototype.getReturn = function() {
+    return this.scopes[this.scopes.length - 1].returnValue;
+  };
+
+  State.prototype.getThis = function() {
+    return this.scopes[this.scopes.length - 1].thisMember;
+  }
+
+  /**
+   * @constructor
+   */
+  function Scope(pThisMember, pScopeChain) {
+    this.scopeChain = pScopeChain;
+    this.thisMember = pThisMember;
+    this.members = new Value({});
+    this.returnValue = UNDEFINED();
+  }
+
+  function resolveAST(pAST, pState) {
+    var tType = pAST.type;
+    var tArray, tArray2;
+    var i, il, k;
+    var tLength;
+    var tResolved, tResolved2;
+    var func;
+
+    switch (tType) {
+      case 'Program':
+      case 'BlockStatement':
+        tArray = pAST.body;
+        for (i = 0, il = tArray.length; i < il; i++) {
+          resolveAST(tArray[i], pState);
+        }
         break;
-      case 'VariableDeclarator':
-        mScope.members[pNode.id.name] = pNode.init ? resolveNode(pNode.init) : null;
-        break;
-      case 'FunctionDeclaration':
-      case 'FunctionExpression':
-        if (pNode.id) {
-          mScope.members[pNode.id.name] = null;
+      case 'ExpressionStatement':
+        return resolveAST(pAST.expression, pState);
+      case 'CallExpression':
+        pState.pushScope(pAST.callee);
+
+        tArray = pAST.arguments;
+        tArray2 = [];
+
+        for (i = 0, il = tArray.length; i < il; i++) {
+          tArray2[i] = pState.resolve(resolveAST(tArray[i], pState));
         }
 
-        for (i = 0, il = pNode.params.length; i < il; i++) {
-          mScope.scopes[mScope.scopes.length - 1].members[pNode.params[i].name] = null;
+        pState.assign('arguments', new Value(tArray2));
+
+        tResolved = pState.resolve(resolveAST(pAST.callee, pState));
+        if (!tResolved.isSet) {
+          return UNDEFINED();
+        }
+
+        tResolved = tResolved.value();
+
+        pState.popScope();
+
+        return tResolved;
+      case 'FunctionExpression':
+      case 'FunctionDeclaration':
+        func = new Value(function() {
+          pState.pushScope(func);
+
+          if (tType === 'FunctionExpression' && pAST.id) {
+            pState.assign(pAST.id.name, func);
+          }
+
+          tResolved = pState.resolve('arguments');
+
+          if (tResolved) {
+            tArray = tResolved.value;
+            tLength = tArray.length;
+            tArray2 = pAST.params;
+            for (i = 0, il = tArray2.length; i < il; i++) {
+              if (i < tLength) {
+                pState.assign(tArray2[i].name, tArray[i]);
+              } else {
+                pState.assign(tArray2[i].name, UNDEFINED());
+              }
+            }
+          }
+
+          resolveAST(pAST.body, pState);
+
+          var tReturn = pState.getReturn();
+
+          pState.popScope();
+
+          return tReturn;
+        });
+
+        if (tType === 'FunctionDeclaration' && pAST.id) {
+          pState.assign(pAST.id.name, func);
+        }
+
+        return func;
+      case 'VariableDeclaration':
+        tArray = pAST.declarations;
+
+        for (i = 0, il = tArray.length; i < il; i++) {
+          tResolved = UNDEFINED();
+          if (tArray[i].init) {
+            tResolved = pState.resolve(resolveAST(tArray[i].init, pState));
+            if (!tResolved.isSet) {
+              pState.require(tArray[i].init);
+            }
+          }
+          pState.assign(tArray[i].id.name, tResolved);
         }
         break;
       case 'AssignmentExpression':
-        mScope.assigns[resolveNode(pNode.left)] = resolveNode(pNode.right);
-        break;
+        tResolved = pState.resolve(resolveAST(pAST.left, pState));
+
+        if (!tResolved.isSet) {
+          //pState.require(pAST.left);
+        }
+
+        tResolved2 = pState.resolve(resolveAST(pAST.right, pState));
+
+        if (!tResolved2.isSet) {
+          pState.require(pAST.right);
+          return tResolved2;
+        }
+
+        tResolved.set(tResolved2.value);
+
+        return tResolved2;
+      case 'MemberExpression':
+        tResolved = pState.resolve(resolveAST(pAST.object, pState));
+
+        if (!tResolved.isSet) {
+          pState.require(pAST.object);
+          return tResolved;
+        }
+
+        tResolved2 = pState.resolve(resolveAST(pAST.property, pState));
+
+        if (!tResolved2.isSet) {
+          //pState.require(pAST.property);
+          tResolved2 = tResolved.value[tResolved2.value + ''] = new Value({});
+          tResolved2.isSet = false;
+          return tResolved2;
+        }
+
+        return tResolved.value[tResolved2.value + ''];
+      case 'Identifier':
+        tResolved = new Value(pAST.name);
+        tResolved.isSet = false;
+        return tResolved;
+      case 'ThisExpression':
+        return pState.getThis();
+      case 'Literal':
+        return new Value(pAST.value);
+      case 'ObjectExpression':
+        tResolved = {};
+        for (i = 0, il = pAST.properties.length; i < il; i++) {
+          tResolved[resolveAST(pAST.properties[i].key).value] = pState.resolve(resolveAST(pAST.properties[i].value));
+        }
+        return new Value(tResolved);
+      case 'ArrayExpression':
+        tArray = [];
+        for (i = 0, il = pAST.elements.length; i < il; i++) {
+          tArray[i] = pState.resolve(resolveAST(pAST.elements[i]));
+        }
+        return new Value(tArray);
+      default:
+        return UNDEFINED();
     }
 
-    return pNode;
+    return void 0;
+  }
+
+  function Value(pValue) {
+    this.value = pValue;
+    this.isSet = true;
+  }
+
+  Value.prototype.set = function(pValue) {
+    this.value = pValue;
+    this.isSet = true;
+  };
+
+  function UNDEFINED() {
+    return new Value(void 0);
+  };
+
+  function NULL() {
+    return new Value(null);
+  };
+
+  var mCache = [];
+
+  function safePrint(pObject) {
+    print(JSON.stringify(pObject, function(pKey, pValue) {
+      if (typeof pValue === 'object' && pValue !== null) {
+        if (mCache.indexOf(pValue) !== -1) {
+          return '... (circular reference to object)';
+        }
+
+        mCache.push(pValue);
+      } else if (typeof pValue === 'function') {
+        if (mCache.indexOf(pValue) !== -1) {
+          return '... (circular reference to function)';
+        }
+
+        mCache.push(pValue);
+
+        var tObject = {};
+
+        for (var k in pValue) {
+          tObject[k] = pValue[k];
+        }
+
+        return tObject;
+      }
+
+      return pValue;
+    }, 2));
+
+    mCache.length = 0;
   }
 
   global.plugins.JSBuilder = JSBuilder;
