@@ -16,8 +16,10 @@ OUT ?= bin
 BUILD_DIR ?= build
 NATIVE_BUILD_DIR := $(BUILD_DIR)/native
 JS_BUILD_DIR := $(BUILD_DIR)/js
+ASSET_BUILD_DIR := $(BUILD_DIR)/assets
 SRC_DIR := src
 JS_SRC_DIR := $(SRC_DIR)/js
+ASSET_DIR := assets
 NATIVE_SRC_DIR := $(SRC_DIR)/native
 
 ifeq ($(OS),Darwin)
@@ -39,8 +41,10 @@ endif
 
 NATIVE_FILES := $(shell find $(NATIVE_SRC_DIR) -type f -name '*.cc')
 JS_FILES := $(shell find $(JS_SRC_DIR) -type f -name '*.js' | sort)
+ASSET_FILES := $(shell find $(ASSET_DIR) -type f | sort)
 NATIVE_BUILD_FILES := $(addprefix $(NATIVE_BUILD_DIR)/,$(NATIVE_FILES:.cc=.o))
 JS_BUILD_FILES := $(addprefix $(JS_BUILD_DIR)/,$(JS_FILES:.js=.c))
+ASSET_BUILD_FILES := $(addprefix $(ASSET_BUILD_DIR)/,$(addsuffix .c,$(ASSET_FILES)))
 
 NATIVE_DEPS := $(shell find $(NATIVE_SRC_DIR) -type f -name '*.h')
 
@@ -52,12 +56,19 @@ TEMP_JS_FILES := char sJavaScriptFiles[] = { $(subst $(space),$(comma),$(subst .
 TEMP_JS_FILE_LENS := const int sJavaScriptFileLengths[] = { $(subst $(space),$(comma),$(subst .js,_js_len,$(subst /,_,$(subst -,_,$(JS_FILES))))) };
 TEMP_JS_FILE_COUNT := const int sJavaScriptFilesCount = $(shell echo "$(JS_FILES)" | wc -w);
 
-.PHONY: all print clean v8 _jsexec jsexec $(NATIVE_BUILD_DIR) $(JS_BUILD_DIR)
+TEMP_ASSET_FILES := char sAssetFiles[] = { $(subst $(space),$(comma),$(subst .,_,$(subst /,_,$(subst -,_,$(ASSET_FILES))))) };
+TEMP_ASSET_FILE_NAMES := char *sAssetFileNames[] = { $(subst $(ASSET_DIR)/,$(noop),$(subst $(space),$(comma),$(addprefix \",$(addsuffix \",$(subst \",\\\", $(ASSET_FILES)))))) };
+TEMP_ASSET_FILE_LENS := const int sAssetFileLengths[] = { $(subst $(space),$(comma),$(subst .js,_js_len,$(subst /,_,$(subst -,_,$(ASSET_FILES))))) };
+TEMP_ASSET_FILE_COUNT := const int sAssetFilesCount = $(shell echo "$(ASSET_FILES)" | wc -w);
+
+.PHONY: all print clean v8 _jsexec jsexec $(NATIVE_BUILD_DIR) $(JS_BUILD_DIR) $(ASSET_BUILD_DIR)
 
 print:
 	@echo $(JS_FILES)
 	@echo $(JS_BUILD_FILES)
 	@echo $(TEMP_JS_FILES)
+	@echo $(TEMP_ASSET_FILES)
+	@echo $(TEMP_ASSET_FILE_NAMES)
 	@echo $(OS)
 	@echo $(ARCH)
 	@echo $(CFLAGS)
@@ -76,7 +87,11 @@ $(JS_BUILD_FILES): $(JS_BUILD_DIR)/%.c: %.js
 	mkdir -p $$(dirname $@)
 	xxd -i $< | tr -d '\n{}' | sed 's/^unsigned char \([a-zA-Z0-9_]*\)\[\] =/#define \1/' | tr ';' '\n' | sed 's/unsigned int \([a-zA-Z0-9_]*\) =/#define \1/' > $@
 
-_jsexec: $(BUILD_DIR)/javascript_files.o $(NATIVE_BUILD_FILES) 
+$(ASSET_BUILD_FILES): $(ASSET_BUILD_DIR)/%.c: %
+	mkdir -p $$(dirname $@)
+	xxd -i $< | tr -d '\n{}' | sed 's/^unsigned char \([a-zA-Z0-9_]*\)\[\] =/#define \1/' | tr ';' '\n' | sed 's/unsigned int \([a-zA-Z0-9_]*\) =/#define \1/' > $@
+
+_jsexec: $(BUILD_DIR)/javascript_files.o $(BUILD_DIR)/asset_files.o $(NATIVE_BUILD_FILES)
 	$(LINK) $(CFLAGS) $^ -pthread -fno-rtti -fno-exceptions -fvisibility=hidden -fdata-sections -ffunction-sections -fomit-frame-pointer -O3 -L$(V8DIR_OUT) -lv8_base -lv8_snapshot -o $(OUT)/$(EXEC)
 
 $(BUILD_DIR)/javascript_files.c: $(JS_BUILD_FILES)
@@ -87,10 +102,20 @@ $(BUILD_DIR)/javascript_files.c: $(JS_BUILD_FILES)
 $(BUILD_DIR)/javascript_files.o: $(BUILD_DIR)/javascript_files.c
 	cat $(JS_BUILD_FILES) $^ | $(CC) $(CFLAGS) -x c -c -o $@ -
 
-directories: $(NATIVE_BUILD_DIR) $(JS_BUILD_DIR)
+$(BUILD_DIR)/asset_files.c: $(ASSET_BUILD_FILES)
+	echo "$(TEMP_ASSET_FILES)" > $@;
+	echo "$(TEMP_ASSET_FILE_NAMES)" >> $@
+	echo "$(TEMP_ASSET_FILE_LENS)" >> $@
+	echo "$(TEMP_ASSET_FILE_COUNT)" >> $@
+
+$(BUILD_DIR)/asset_files.o: $(BUILD_DIR)/asset_files.c
+	cat $(ASSET_BUILD_FILES) $^ | $(CC) $(CFLAGS) -x c -c -o $@ -
+
+directories: $(NATIVE_BUILD_DIR) $(JS_BUILD_DIR) $(ASSET_BUILD_DIR)
 	mkdir -p $(OUT) 2> /dev/null
 	mkdir -p $(NATIVE_BUILD_DIR) 2> /dev/null;
 	mkdir -p $(JS_BUILD_DIR) 2> /dev/null
+	mkdir -p $(ASSET_BUILD_DIR) 2> /dev/null
 
 v8:
 	make -C "vendor/v8" dependencies;

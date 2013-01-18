@@ -61,6 +61,8 @@ Persistent<Context> sCreateContext() {
 
   tGlobal->Set(String::New("realpath"), FunctionTemplate::New(sRealpath));
 
+  tGlobal->Set(String::New("readAsset"), FunctionTemplate::New(sReadAsset));
+
   return Context::New(NULL, tGlobal);
 }
 
@@ -93,6 +95,40 @@ Handle<Value> sInput(const Arguments &pArgs) {
 
   Handle<String> tResult = String::New(tFinal.c_str());
   return tResult;
+}
+
+extern char sAssetFiles[];
+extern char *sAssetFileNames[];
+extern const int sAssetFileLengths[];
+extern const int sAssetFilesCount;
+
+Handle<Value> sReadAsset(const Arguments &pArgs) {
+  int tIndex = -1;
+  int tByteIndex = 0;
+  int i;
+
+  if (pArgs.Length() != 1) {
+    return ThrowException(String::New("Too many arguments."));
+  }
+
+  String::Utf8Value tAssetName(pArgs[0]);
+
+  for (i = 0; i < sAssetFilesCount; i++) {
+    if (strcmp(*tAssetName, sAssetFileNames[i]) == 0) {
+      tIndex = i;
+      break;
+    }
+
+    tByteIndex += sAssetFileLengths[i];
+  }
+
+  if (tIndex == -1) {
+    return Null();
+  }
+
+  Handle<String> tContents = String::New(sAssetFiles + tByteIndex, sAssetFileLengths[tIndex]);
+
+  return tContents;
 }
 
 Handle<Value> sRead(const Arguments &pArgs) {

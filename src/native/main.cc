@@ -1,8 +1,8 @@
-/**                                                                                                                                    
- * @author Jason Parrott                                                                                                               
- *                                                                                                                                     
- * Copyright (C) 2012 Jason Parrott.                                                                                                   
- * This code is licensed under the zlib license. See LICENSE for details.                                                              
+/**
+ * @author Jason Parrott
+ *
+ * Copyright (C) 2012 Jason Parrott.
+ * This code is licensed under the zlib license. See LICENSE for details.
  */
 
 
@@ -18,6 +18,10 @@ using namespace v8;
 extern char sJavaScriptFiles[];
 extern const int sJavaScriptFileLengths[];
 extern const int sJavaScriptFilesCount;
+
+extern char sAssetFiles[];
+extern const int sAssetFileLengths[];
+extern const int sAssetFilesCount;
 
 int main(int argc, char *argv[]) {
   HandleScope tScope;
@@ -63,7 +67,7 @@ int main(int argc, char *argv[]) {
     }
     tPointer += sJavaScriptFileLengths[i];
   }
-  
+
   if (tContext->Global()->Has(String::New("main"))) {
     TryCatch tTryCatch;
     Local<Function> tFunction = Function::Cast(*tContext->Global()->Get(String::New("main")));
