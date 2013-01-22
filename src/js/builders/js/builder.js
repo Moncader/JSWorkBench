@@ -286,7 +286,7 @@ var GO = false;
             return false;
           }
 
-          print(mFiles[i]);
+          //print(mFiles[i]);
 
           //print('AST');
           //safePrint(tAST);
@@ -305,15 +305,12 @@ var GO = false;
             source: tSource,
             stats: tStats
           });
-          print('GLOBALS');
+          //print('GLOBALS');
           //safePrint(tStats.exports);
-          safePrint(tStats.global);
-          print('REQUIRES');
-          safePrint(tStats.requires);
-
-          //tOutput += '\n' + global.read(mFiles[i]);
+          //safePrint(tStats.global);
+          //print('REQUIRES');
+          //safePrint(tStats.requires);
         }
-
         tSortedFiles = sortFiles(tSortedFiles);
         tOutput = '';
 
@@ -323,9 +320,9 @@ var GO = false;
           tOutput += '\n' + tSortedFiles[i].source;
         }
 
-        //global.system('mkdir -p $(dirname ' + tOutputFile + ')');
+        global.system('mkdir -p $(dirname ' + tOutputFile + ')');
 
-        //global.write(tOutputFile, tOutput);
+        global.write(tOutputFile, tOutput);
 
         reset();
 
@@ -358,7 +355,7 @@ var GO = false;
       var tKeys;
       var i, il, k;
 
-      if (pObject.isRequired === true && pObject.isNative === false) {
+      if (pObject.isRequired === true && pObject.isNative === false && tNamespaceStack[tNamespaceStack.length - 1] !== 'prototype') {
         tRequires.push(tNamespaceStack.join('.'));
       }
 
@@ -950,6 +947,11 @@ var GO = false;
       } else {
         tName = this.handleAndResolve(pAST.property).value + '';
       }
+    }
+
+    if (tResolved.value === void 0 || tResolved.value === null) {
+      print('Attempt to get ' + tName + ' of non value. Returning UNDEFINED');
+      return UNDEFINED();
     }
 
     if (!tResolved.value[tName]) {
