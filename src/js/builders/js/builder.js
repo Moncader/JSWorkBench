@@ -535,11 +535,11 @@ var GO = false;
     var i;
     var tName;
 
-    if (pValue.isLiteral) {
-      return pValue;
-    }
-
     if (pValue instanceof Value) {
+      if (pValue.isLiteral) {
+        return pValue;
+      }
+
       if (typeof pValue.value !== 'string') {
         return pValue;
       }
@@ -560,7 +560,9 @@ var GO = false;
       }
     }
 
-    pValue.isSet = false;
+    pValue = new Value({}, false, false);
+
+    tScope.assign(tName, pValue);
 
     return pValue;
   };
