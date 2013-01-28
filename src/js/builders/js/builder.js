@@ -12,8 +12,6 @@
 
   var mFiles = [];
 
-var GO = false;
-
   /**
    * @class
    * @extends {plugins.Builder}
@@ -29,13 +27,16 @@ var GO = false;
         minify: true
       };
 
+      this.workspace = '';
+
       mBuildDepth++;
     }
 
     JSBuilder.prototype = Object.create(pSuper.prototype);
 
-    JSBuilder.prototype.setData = function(pData) {
+    JSBuilder.prototype.setData = function(pData, pWorkspace) {
       var tData = this.data;
+      this.workspace = pWorkspace;
 
       if (pData.outputs) {
         this.output = this.config.expand(pData.outputs);
@@ -262,6 +263,11 @@ var GO = false;
       var esprima = global.esprima;
       var tAST;
       var tSortedFiles = [];
+      var tCachedStats;
+      var tFileName;
+      var tFileMTime;
+      var tFileStatsName;
+      var tFileStatsStat;
 
       mBuildDepth--;
 
@@ -275,42 +281,57 @@ var GO = false;
         }
 
         for (i = 0, il = mFiles.length; i < il; i++) {
-          tSource = global.read(mFiles[i]);
+          tFileName = mFiles[i];
+          tFileMTime = stat(tFileName).mtime;
+          tSource = global.read(tFileName);
+          tFileStatsName = this.workspace + '/' + tFileName.replace(/\//g, '_');
 
-          try {
-            tAST = esprima.parse(tSource);
-          } catch (e) {
-            print('Failed to parse ' + mFiles[i]);
-            print(e);
-            reset();
-            return false;
+          if ((tFileStatsStat = stat(tFileStatsName)) === null || tFileStatsStat.mtime < tFileMTime) {
+            try {
+              tAST = esprima.parse(tSource);
+            } catch (e) {
+              print('Failed to parse ' + tFileName);
+              print(e);
+              reset();
+              return false;
+            }
+
+            //print(tFileName);
+
+            //print('AST');
+            //safePrint(tAST);
+
+            var tDefaultMembers = createGlobalScope().members;
+            var tGlobalScope = new Scope(tDefaultMembers, []);
+            tGlobalScope.members = tDefaultMembers;
+            tGlobalScope.addAST(tAST);
+            tGlobalScope.interpret();
+
+            var tStats = exportStats(tGlobalScope);
+
+            tSortedFiles.push({
+              file: tFileName,
+              source: tSource,
+              stats: tStats
+            });
+            //print('GLOBALS');
+            //safePrint(tStats.exports);
+            //safePrint(tStats.global);
+            //print('REQUIRES');
+            //safePrint(tStats.requires);
+
+            delete tStats.global;
+
+            global.write(tFileStatsName, JSON.stringify(tStats));
+          } else {
+            tSortedFiles.push({
+              file: tFileName,
+              source: tSource,
+              stats: JSON.parse(global.read(tFileStatsName))
+            });
           }
-
-          //print(mFiles[i]);
-
-          //print('AST');
-          //safePrint(tAST);
-
-          var tDefaultMembers = createGlobalScope().members;
-          var tGlobalScope = new Scope(tDefaultMembers, []);
-          tGlobalScope.members = tDefaultMembers;
-          GO = true;
-          tGlobalScope.addAST(tAST);
-          tGlobalScope.interpret();
-
-          var tStats = exportStats(tGlobalScope);
-
-          tSortedFiles.push({
-            file: mFiles[i],
-            source: tSource,
-            stats: tStats
-          });
-          //print('GLOBALS');
-          //safePrint(tStats.exports);
-          //safePrint(tStats.global);
-          //print('REQUIRES');
-          //safePrint(tStats.requires);
         }
+
         tSortedFiles = sortFiles(tSortedFiles);
         tOutput = '';
 

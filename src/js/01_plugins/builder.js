@@ -24,7 +24,7 @@
      * @param {Object} pData The data given from the config file.
      * @return {bool} Return false on failure. Anything else is a pass.
      */
-    setData: function(pData) {},
+    setData: function(pData, pWorkspace) {},
 
     /**
      * Called by the system to pass the resources resolved by ResourceHandlers.

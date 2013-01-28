@@ -59,7 +59,7 @@
       }
 
       var tWorkspace = (pConfig.properties.buildDir || 'build') +
-            '/' + tResourceId;
+            '/resources/' + tResourceId;
 
       if (global.stat(tWorkspace) === null) {
         system("mkdir -p '" + tWorkspace + "'");

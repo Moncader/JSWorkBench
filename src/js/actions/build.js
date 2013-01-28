@@ -54,6 +54,8 @@
 
       var tGlobalResources = pConfig.resources;
 
+      var tWorkspace = (pConfig.properties.buildDir || 'build') + '/';
+
       for (var i = 0, il = tResources.length; i < il; i++) {
         var tResource = tResources[i];
         var tResourceName = tResource.name;
@@ -101,17 +103,16 @@
           return;
         }
 
-        var tWorkspace = (pConfig.properties.buildDir || 'build') +
-              '/' + tResourceId;
+        var tResourceWorkspace = tWorkspace + 'resources/' + tResourceId;
 
         var tNeedsPrepare = tResourceOverriden;
-        if (global.stat(tWorkspace) === null) {
+        if (global.stat(tResourceWorkspace) === null) {
           tNeedsPrepare = true;
-          system("mkdir -p '" + tWorkspace + "'");
+          system("mkdir -p '" + tResourceWorkspace + "'");
         }
 
         var tResourceHandler = new tResourceHandlers[tResource.type](pConfig);
-        tResourceHandler.setData(tResource, tWorkspace);
+        tResourceHandler.setData(tResource, tResourceWorkspace);
 
         if (tNeedsPrepare === true) {
           if (!tResourceHandler.prepare()) {
@@ -127,7 +128,13 @@
         tResourceList = tResourceList.concat(tPartialResourceList);
       }
 
-      if (tBuilder.setData(pTarget) === false) {
+      var tBuilderWorkspace = tWorkspace + 'builders/' + tBuilderType;
+
+      if (global.stat(tBuilderWorkspace) === null) {
+        system("mkdir -p '" + tBuilderWorkspace + "'");
+      }
+
+      if (tBuilder.setData(pTarget, tBuilderWorkspace) === false) {
         throw new Error('Setting data for builder failed.');
       }
 
