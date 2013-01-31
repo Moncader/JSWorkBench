@@ -827,7 +827,12 @@
     var tScope, tBackupScope = null;
 
     for (i = 0, il = tArray.length; i < il; i++) {
-      tArray2[i] = this.handleAndResolve(tArray[i]);
+      tResolved = tArray2[i] = this.handleAndResolve(tArray[i]);
+      if (!tResolved.isSet) {
+        if (!tResolved.isRequired) {
+          tResolved.require();
+        }
+      }
     }
 
     tResolved = this.handleAndResolve(pAST.callee);
