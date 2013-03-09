@@ -66,3 +66,8 @@ window.print = function() {};
 window.showModalDialog = function() {};
 
 window.postMessage = function() {};
+
+window.innerWidth = 0;
+window.innerHeight = 0;
+window.outerWidth = 0;
+window.outerHeight = 0;

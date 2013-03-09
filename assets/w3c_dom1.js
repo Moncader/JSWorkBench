@@ -346,6 +346,15 @@ Document.prototype.documentElement;
  */
 Document.prototype.implementation;
 
+/** @override */
+Document.prototype.addEventListener = function(type, listener, useCapture) {};
+
+/** @override */
+Document.prototype.removeEventListener = function(type, listener, useCapture) {};
+
+/** @override */
+Document.prototype.dispatchEvent = function(evt) {};
+
 /**
  * @param {string} name
  * @return {!Attr}

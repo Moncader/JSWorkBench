@@ -425,6 +425,8 @@ HTMLStyleElement.prototype.sheet;
  */
 function HTMLBodyElement() {}
 
+HTMLBodyElement.prototype.appendChild;
+
 /**
  * @type {string}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-59424581
@@ -460,6 +462,9 @@ HTMLBodyElement.prototype.text;
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-83224305
  */
 HTMLBodyElement.prototype.vLink;
+
+Document.prototype.body = new HTMLBodyElement();
+Document.prototype.head = new HTMLHeadElement();
 
 /**
  * @constructor

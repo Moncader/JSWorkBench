@@ -2793,3 +2793,6 @@ Window.prototype.WebKitMutationObserver;
  * @type {function(new:MutationObserver, function(Array.<MutationRecord>))}
  */
 Window.prototype.MozMutationObserver;
+
+function AudioContext() {};
+function webkitAudioContext() {};
