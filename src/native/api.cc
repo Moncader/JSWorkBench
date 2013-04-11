@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <limits.h>
+#include <dlfcn.h>
 
 #include <v8.h>
 #include "api.h"
@@ -63,7 +64,96 @@ Persistent<Context> sCreateContext() {
 
   tGlobal->Set(String::New("readAsset"), FunctionTemplate::New(sReadAsset));
 
+  tGlobal->Set(String::New("dlopen"), FunctionTemplate::New(sDLOpen));
+
+  tGlobal->Set(String::New("dlsym"), FunctionTemplate::New(sDLSym));
+
+  tGlobal->Set(String::New("dlclose"), FunctionTemplate::New(sDLClose));
+
+  tGlobal->Set(String::New("dlerror"), FunctionTemplate::New(sDLError));
+
   return Context::New(NULL, tGlobal);
+}
+
+class LibraryHandle {
+  public:
+    LibraryHandle(void *pHandle) : handle(pHandle) {}
+    void *handle;
+};
+
+class SymbolHandle {
+  public:
+    SymbolHandle(void *pHandle) : handle(pHandle) {}
+    void *handle;
+};
+
+Handle<Value> sDLOpen(const Arguments &pArgs) {
+  if (pArgs.Length() != 2) {
+    return ThrowException(String::New("Too many arguments."));
+  }
+
+  String::Utf8Value tLibraryName(pArgs[0]);
+  int tFlags = Local<Integer>::Cast(pArgs[1])->Int32Value();
+
+  void *tHandle = dlopen(*tLibraryName, tFlags);
+
+  if (tHandle == NULL) {
+    return Null();
+  }
+
+  Handle<ObjectTemplate> tTemplate = ObjectTemplate::New();
+  tTemplate->SetInternalFieldCount(1);
+
+  Local<Object> tObject = tTemplate->NewInstance();
+  tObject->SetInternalField(0, External::New(new LibraryHandle(tHandle)));
+
+  return tObject;
+}
+
+Handle<Value> sDLSym(const Arguments &pArgs) {
+  if (pArgs.Length() != 2) {
+    return ThrowException(String::New("Too many arguments."));
+  }
+
+  Local<Object> tLibraryHandleObject = pArgs[0]->ToObject();
+  LibraryHandle *tLibraryHandle = static_cast<LibraryHandle *>(Local<External>::Cast(tLibraryHandleObject->GetInternalField(0))->Value());
+  void *tHandle = tLibraryHandle->handle;
+
+  String::Utf8Value tSymbolName(pArgs[1]);
+
+  void *tSymbolHandle = dlsym(tHandle, *tSymbolName);
+
+  if (tSymbolHandle == NULL) {
+    return Null();
+  }
+
+  Handle<ObjectTemplate> tTemplate = ObjectTemplate::New();
+  tTemplate->SetInternalFieldCount(1);
+
+  Local<Object> tObject = tTemplate->NewInstance();
+  tObject->SetInternalField(0, External::New(new SymbolHandle(tSymbolHandle)));
+
+  return tObject;
+}
+
+Handle<Value> sDLClose(const Arguments &pArgs) {
+  if (pArgs.Length() != 1) {
+    return ThrowException(String::New("Too many arguments."));
+  }
+
+  String::Utf8Value tStr(pArgs[0]);
+
+  return Undefined();
+}
+
+Handle<Value> sDLError(const Arguments &pArgs) {
+  char *tError = dlerror();
+
+  if (tError == NULL) {
+    return Null();
+  }
+
+  return String::New(tError);
 }
 
 Handle<Value> sPrint(const Arguments &pArgs) {

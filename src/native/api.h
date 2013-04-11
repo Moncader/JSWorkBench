@@ -54,6 +54,14 @@ Handle<Value> sRealpath(const Arguments &pArgs);
 
 Handle<Value> sReadAsset(const Arguments &pArgs);
 
+Handle<Value> sDLOpen(const Arguments &pArgs);
+
+Handle<Value> sDLSym(const Arguments &pArgs);
+
+Handle<Value> sDLClose(const Arguments &pArgs);
+
+Handle<Value> sDLError(const Arguments &pArgs);
+
 
 Handle<Value> sReadFile(const char *pName);
 

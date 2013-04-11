@@ -49,6 +49,27 @@
 
   global.on('registerCommands', function(pActions) {
     pActions.init = init;
+    pActions.test = function() {
+      var tLib = dlopen('/opt/X11/lib/libglut.dylib', 0);
+
+      if (tLib === null) {
+        print(dlerror());
+        throw new Error("FAIL TO LOAD DL");
+      }
+
+      var glutInit = dlsym(tLib, 'glutInit');
+      var glutInitDisplayMode = dlsym(tLib, 'glutInitDisplayMode');
+      var glutInitWindowSize = dlsym(tLib, 'glutInitWindowSize');
+      var glutInitWindowPosition = dlsym(tLib, 'glutInitWindowPosition');
+      var glutInitDisplayMode = dlsym(tLib, 'glutInitDisplayMode');
+      var glutCreateWindow = dlsym(tLib, 'glutCreateWindow');
+      var glutMainLoop = dlsym(tLib, 'glutMainLoop');
+
+      if (glutInit === null) {
+        print(dlerror());
+        throw new Error("FAIL TO LOAD SYM");
+      }
+    };
   });
 
 }(this));
