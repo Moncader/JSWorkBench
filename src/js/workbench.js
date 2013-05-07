@@ -19,10 +19,11 @@
     /**
      * Initializes this WorkBench from the given config file.
      * @param {string} pConfigFile The file path to the config file to open.
+     * @param {string} pDontOverride Whether to override the config file with user setting.
      */
-    load: function(pConfigFile) {
+    load: function(pConfigFile, pDontOverride) {
       try {
-        var tConfig = this.config = parseConfig(pConfigFile);
+        var tConfig = this.config = parseConfig(pConfigFile, pDontOverride);
         tConfig.workbench = this;
       } catch (e) {
         this.config = null;

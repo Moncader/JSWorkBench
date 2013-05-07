@@ -43,7 +43,9 @@
 
     tWorkBench.commands.help = printUsage;
 
-    if (!tWorkBench.load()) {
+    var tDontOverride = (args.indexOf('--commit') !== -1);
+
+    if (!tWorkBench.load(null, tDontOverride)) {
       printUsage();
       return 1;
     }

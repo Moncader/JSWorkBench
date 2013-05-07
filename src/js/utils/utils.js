@@ -22,4 +22,16 @@
     return false;
   };
 
+  global.util.gitCommitDate = function(pCommit, pAuthorDate) {
+    var tDateFormat = 'cd';
+    if (pAuthorDate) {
+      tDateFormat = 'ad';
+    }
+    return system('git show --format=format:"%' + tDateFormat + '" ' + pCommit + ' | head -n 1').trim();
+  };
+
+  global.util.gitUpdateCurrentBranch = function(pCommit) {
+    system('git reset --soft ' + pCommit);
+  };
+
 }(this));

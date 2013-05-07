@@ -31,10 +31,24 @@
 
   GitHandler.prototype.execute = function() {
     var tRoot = this.root;
+    var tDateTime = this.config.dateTime;
 
-    var tOut = system("if [ -d '" + tRoot + "' ] ; then cd '" + tRoot + "' && git pull origin " + this.branch + "; else git clone -b " + this.branch + " " + this.url + " " + tRoot + '; fi');
+    var tCommand = "if [ -d '" + tRoot + "' ] ; then cd '" + tRoot + "' && git pull origin " + this.branch + "; else git clone -b " + this.branch + " " + this.url + " " + tRoot + '; fi';
+    print(tCommand);
+    var tOut = system(tCommand);
 
     if (!this.config.isQuiet) print(tOut);
+
+    if (tDateTime) {
+      tCommand = 'cd ' + tRoot + ' && git rev-list -n 1 --before="' + tDateTime + '" ' + this.branch;
+      if (!this.config.isQuiet) print(tCommand);
+      var tCommit = tOut = system(tCommand);
+      if (!this.config.isQuiet) print(tOut);
+      tCommand = 'cd ' + tRoot + ' && git checkout ' + tCommit;
+      if (!this.config.isQuiet) print(tCommand);
+      tOut = system(tCommand);
+      if (!this.config.isQuiet) print(tOut);
+    }
 
     tOut = system('cd ' + tRoot + ' && git submodule update --init');
 
