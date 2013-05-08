@@ -43,7 +43,7 @@
 
     tWorkBench.commands.help = printUsage;
 
-    var tDontOverride = (args.indexOf('--commit') !== -1);
+    var tDontOverride = (args.indexOf('--ignore-local') !== -1 || args.indexOf('--commit=') !== -1);
 
     if (!tWorkBench.load(null, tDontOverride)) {
       printUsage();

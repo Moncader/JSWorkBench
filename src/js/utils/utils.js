@@ -31,7 +31,7 @@
   };
 
   global.util.gitUpdateCurrentBranch = function(pCommit) {
-    system('git reset --soft ' + pCommit);
+    system('git reset --hard ' + pCommit);
   };
 
 }(this));

@@ -62,7 +62,7 @@
     chdir(this.workspace);
 
     var tPackageWorkBench = new WorkBench();
-    if (!tPackageWorkBench.load(this.data.buildFile)) {
+    if (!tPackageWorkBench.load(this.data.buildFile, this.config.ignoreLocal)) {
       throw new Error('Failed to get resources of package.');
     }
     var tPackageConfig = tPackageWorkBench.config;
@@ -95,7 +95,7 @@
     chdir(this.workspace);
 
     var tPackageWorkBench = new WorkBench();
-    if (!tPackageWorkBench.load(this.data.buildFile)) {
+    if (!tPackageWorkBench.load(this.data.buildFile, this.config.ignoreLocal)) {
       throw new Error('Failed to get resources of package.');
     }
     var tPackageConfig = tPackageWorkBench.config;

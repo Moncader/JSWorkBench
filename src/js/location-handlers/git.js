@@ -44,7 +44,7 @@
       if (!this.config.isQuiet) print(tCommand);
       var tCommit = tOut = system(tCommand);
       if (!this.config.isQuiet) print(tOut);
-      tCommand = 'cd ' + tRoot + ' && git checkout ' + tCommit;
+      tCommand = 'cd ' + tRoot + ' && git reset --hard ' + tCommit;
       if (!this.config.isQuiet) print(tCommand);
       tOut = system(tCommand);
       if (!this.config.isQuiet) print(tOut);
