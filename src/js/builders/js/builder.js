@@ -1060,6 +1060,12 @@
   };
 
   p.ReturnStatement = function(pAST) {
+    if (!pAST.argument) {
+      this.returnValue = UNDEFINED();
+
+      return;
+    }
+
     this.returnValue = this.handleAndResolve(pAST.argument);
   };
 
