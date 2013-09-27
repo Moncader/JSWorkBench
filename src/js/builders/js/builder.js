@@ -705,7 +705,7 @@
       }
 
       tResolved = tScope.resolve('arguments');
-      if (tResolved) {
+      if (tResolved && pParams) {
         tArguments = tResolved.value;
         tLength = tArguments.length;
         for (i = 0, il = pParams.length; i < il; i++) {
@@ -841,7 +841,8 @@
       if (!tResolved.isRequired) {
         tResolved.require();
       }
-      return UNDEFINED();
+      //return UNDEFINED();
+      tResolved = createFunction(new Scope(), null, [], []);
     }
 
     var tScope = tResolved.scope;
@@ -1060,7 +1061,11 @@
   };
 
   p.ReturnStatement = function(pAST) {
-    this.returnValue = this.handleAndResolve(pAST.argument);
+    if (pAST.argument === null) {
+      this.returnValue = UNDEFINED();
+    } else {
+      this.returnValue = this.handleAndResolve(pAST.argument);
+    }
   };
 
 

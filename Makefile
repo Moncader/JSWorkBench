@@ -92,7 +92,7 @@ $(ASSET_BUILD_FILES): $(ASSET_BUILD_DIR)/%.c: %
 	xxd -i $< | tr -d '\n{}' | sed 's/^unsigned char \([a-zA-Z0-9_]*\)\[\] =/#define \1/' | tr ';' '\n' | sed 's/unsigned int \([a-zA-Z0-9_]*\) =/#define \1/' > $@
 
 _jsexec: $(BUILD_DIR)/javascript_files.o $(BUILD_DIR)/asset_files.o $(NATIVE_BUILD_FILES)
-	$(LINK) $(CFLAGS) $^ -pthread -fno-rtti -fno-exceptions -fvisibility=hidden -fdata-sections -ffunction-sections -fomit-frame-pointer -O3 -L$(V8DIR_OUT) -lv8_base -lv8_snapshot -o $(OUT)/$(EXEC)
+	$(LINK) $(CFLAGS) $^ -pthread -fno-rtti -fno-exceptions -fvisibility=hidden -fdata-sections -ffunction-sections -fomit-frame-pointer -O3 -L$(V8DIR_OUT) -lv8_base -lv8_snapshot -ldl -o $(OUT)/$(EXEC)
 
 $(BUILD_DIR)/javascript_files.c: $(JS_BUILD_FILES)
 	echo "$(TEMP_JS_FILES)" > $@;

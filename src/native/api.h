@@ -10,7 +10,7 @@
 
 #define _API_H 1
 
-#include <string>
+#include <string.h>
 #include <v8.h>
 
 using namespace std;

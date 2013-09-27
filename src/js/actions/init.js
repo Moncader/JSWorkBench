@@ -50,7 +50,7 @@
   global.on('registerCommands', function(pActions) {
     pActions.init = init;
     pActions.test = function() {
-      var tLib = dlopen('/opt/X11/lib/libglut.dylib', 0);
+      var tLib = dlopen('libglut.so', 0x00008 | 0x00002);
 
       if (tLib === null) {
         print(dlerror());
@@ -61,9 +61,10 @@
       var glutInitDisplayMode = dlsym(tLib, 'glutInitDisplayMode');
       var glutInitWindowSize = dlsym(tLib, 'glutInitWindowSize');
       var glutInitWindowPosition = dlsym(tLib, 'glutInitWindowPosition');
-      var glutInitDisplayMode = dlsym(tLib, 'glutInitDisplayMode');
       var glutCreateWindow = dlsym(tLib, 'glutCreateWindow');
       var glutMainLoop = dlsym(tLib, 'glutMainLoop');
+
+      glutInit();
 
       if (glutInit === null) {
         print(dlerror());
