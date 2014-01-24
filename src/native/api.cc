@@ -25,54 +25,54 @@ using namespace std;
 using namespace v8;
 
 
-Persistent<Context> sCreateContext() {
-  Handle<ObjectTemplate> tGlobal = ObjectTemplate::New();
+Handle<Context> sCreateContext(Isolate *pIsolate) {
+  Handle<ObjectTemplate> tGlobal = ObjectTemplate::New(pIsolate);
 
-  tGlobal->Set(String::New("print"), FunctionTemplate::New(sPrint));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "print"), FunctionTemplate::New(pIsolate, sPrint));
 
-  tGlobal->Set(String::New("input"), FunctionTemplate::New(sInput));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "input"), FunctionTemplate::New(pIsolate, sInput));
 
-  tGlobal->Set(String::New("read"), FunctionTemplate::New(sRead));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "read"), FunctionTemplate::New(pIsolate, sRead));
 
-  tGlobal->Set(String::New("write"), FunctionTemplate::New(sWrite));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "write"), FunctionTemplate::New(pIsolate, sWrite));
 
-  tGlobal->Set(String::New("fork"), FunctionTemplate::New(sFork));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "fork"), FunctionTemplate::New(pIsolate, sFork));
 
-  tGlobal->Set(String::New("sleep"), FunctionTemplate::New(sSleep));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "sleep"), FunctionTemplate::New(pIsolate, sSleep));
 
-  tGlobal->Set(String::New("system"), FunctionTemplate::New(sSystem));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "system"), FunctionTemplate::New(pIsolate, sSystem));
 
-  tGlobal->Set(String::New("chdir"), FunctionTemplate::New(sChdir));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "chdir"), FunctionTemplate::New(pIsolate, sChdir));
 
-  tGlobal->Set(String::New("getcwd"), FunctionTemplate::New(sGetcwd));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "getcwd"), FunctionTemplate::New(pIsolate, sGetcwd));
 
-  tGlobal->Set(String::New("evalFileInSandbox"), FunctionTemplate::New(sEvalFileInSandbox));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "evalFileInSandbox"), FunctionTemplate::New(pIsolate, sEvalFileInSandbox));
 
-  tGlobal->Set(String::New("evalInSandbox"), FunctionTemplate::New(sEvalInSandbox));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "evalInSandbox"), FunctionTemplate::New(pIsolate, sEvalInSandbox));
 
-  tGlobal->Set(String::New("evalFile"), FunctionTemplate::New(sEvalFile));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "evalFile"), FunctionTemplate::New(pIsolate, sEvalFile));
 
-  tGlobal->Set(String::New("stat"), FunctionTemplate::New(sStat));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "stat"), FunctionTemplate::New(pIsolate, sStat));
 
-  tGlobal->Set(String::New("setenv"), FunctionTemplate::New(sSetenv));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "setenv"), FunctionTemplate::New(pIsolate, sSetenv));
 
-  tGlobal->Set(String::New("getenv"), FunctionTemplate::New(sGetenv));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "getenv"), FunctionTemplate::New(pIsolate, sGetenv));
 
-  tGlobal->Set(String::New("unsetenv"), FunctionTemplate::New(sUnsetenv));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "unsetenv"), FunctionTemplate::New(pIsolate, sUnsetenv));
 
-  tGlobal->Set(String::New("realpath"), FunctionTemplate::New(sRealpath));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "realpath"), FunctionTemplate::New(pIsolate, sRealpath));
 
-  tGlobal->Set(String::New("readAsset"), FunctionTemplate::New(sReadAsset));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "readAsset"), FunctionTemplate::New(pIsolate, sReadAsset));
 
-  tGlobal->Set(String::New("dlopen"), FunctionTemplate::New(sDLOpen));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "dlopen"), FunctionTemplate::New(pIsolate, sDLOpen));
 
-  tGlobal->Set(String::New("dlsym"), FunctionTemplate::New(sDLSym));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "dlsym"), FunctionTemplate::New(pIsolate, sDLSym));
 
-  tGlobal->Set(String::New("dlclose"), FunctionTemplate::New(sDLClose));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "dlclose"), FunctionTemplate::New(pIsolate, sDLClose));
 
-  tGlobal->Set(String::New("dlerror"), FunctionTemplate::New(sDLError));
+  tGlobal->Set(String::NewFromUtf8(pIsolate, "dlerror"), FunctionTemplate::New(pIsolate, sDLError));
 
-  return Context::New(NULL, tGlobal);
+  return Context::New(pIsolate, NULL, tGlobal);
 }
 
 class LibraryHandle {
@@ -87,9 +87,13 @@ class SymbolHandle {
     void *handle;
 };
 
-Handle<Value> sDLOpen(const Arguments &pArgs) {
+static void sDLOpen(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+
   if (pArgs.Length() != 2) {
-    return ThrowException(String::New("Too many arguments."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments.")));
+
+    return;
   }
 
   String::Utf8Value tLibraryName(pArgs[0]);
@@ -98,21 +102,25 @@ Handle<Value> sDLOpen(const Arguments &pArgs) {
   void *tHandle = dlopen(*tLibraryName, tFlags);
 
   if (tHandle == NULL) {
-    return Null();
+    pArgs.GetReturnValue().Set(Null(tIsolate));
   }
 
-  Handle<ObjectTemplate> tTemplate = ObjectTemplate::New();
+  Handle<ObjectTemplate> tTemplate = ObjectTemplate::New(tIsolate);
   tTemplate->SetInternalFieldCount(1);
 
   Local<Object> tObject = tTemplate->NewInstance();
-  tObject->SetInternalField(0, External::New(new LibraryHandle(tHandle)));
+  tObject->SetInternalField(0, External::New(tIsolate, new LibraryHandle(tHandle)));
 
-  return tObject;
+  pArgs.GetReturnValue().Set(tObject);
 }
 
-Handle<Value> sDLSym(const Arguments &pArgs) {
+static void sDLSym(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+
   if (pArgs.Length() != 2) {
-    return ThrowException(String::New("Too many arguments."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments.")));
+
+    return;
   }
 
   Local<Object> tLibraryHandleObject = pArgs[0]->ToObject();
@@ -124,39 +132,51 @@ Handle<Value> sDLSym(const Arguments &pArgs) {
   void *tSymbolHandle = dlsym(tHandle, *tSymbolName);
 
   if (tSymbolHandle == NULL) {
-    return Null();
+    pArgs.GetReturnValue().Set(Null(tIsolate));
+
+    return;
   }
 
-  Handle<ObjectTemplate> tTemplate = ObjectTemplate::New();
+  Handle<ObjectTemplate> tTemplate = ObjectTemplate::New(tIsolate);
   tTemplate->SetInternalFieldCount(1);
 
   Local<Object> tObject = tTemplate->NewInstance();
-  tObject->SetInternalField(0, External::New(new SymbolHandle(tSymbolHandle)));
+  tObject->SetInternalField(0, External::New(tIsolate, new SymbolHandle(tSymbolHandle)));
 
-  return tObject;
+  pArgs.GetReturnValue().Set(tObject);
 }
 
-Handle<Value> sDLClose(const Arguments &pArgs) {
+static void sDLClose(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Too many arguments."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments.")));
+
+    return;
   }
 
   String::Utf8Value tStr(pArgs[0]);
 
-  return Undefined();
+  pArgs.GetReturnValue().Set(Undefined(tIsolate));
 }
 
-Handle<Value> sDLError(const Arguments &pArgs) {
+static void sDLError(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   char *tError = dlerror();
 
   if (tError == NULL) {
-    return Null();
+    pArgs.GetReturnValue().Set(Null(tIsolate));
+
+    return;
   }
 
-  return String::New(tError);
+  pArgs.GetReturnValue().Set(String::NewFromUtf8(tIsolate, tError));
 }
 
-Handle<Value> sPrint(const Arguments &pArgs) {
+static void sPrint(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   bool tFirst = true;
   for (int i = 0, il = pArgs.Length(); i < il; i++) {
     if (tFirst == true) {
@@ -170,12 +190,15 @@ Handle<Value> sPrint(const Arguments &pArgs) {
 
     printf("%s", tCStr);
   }
+
   printf("\n");
   fflush(stdout);
-  return Undefined();
+  pArgs.GetReturnValue().Set(Undefined(tIsolate));
 }
 
-Handle<Value> sInput(const Arguments &pArgs) {
+static void sInput(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   string tIn;
   string tFinal = "";
   while (cin) {
@@ -183,8 +206,8 @@ Handle<Value> sInput(const Arguments &pArgs) {
     tFinal += tIn;
   }
 
-  Handle<String> tResult = String::New(tFinal.c_str());
-  return tResult;
+  Handle<String> tResult = String::NewFromUtf8(tIsolate, tFinal.c_str());
+  pArgs.GetReturnValue().Set(tResult);
 }
 
 extern char sAssetFiles[];
@@ -192,13 +215,17 @@ extern char *sAssetFileNames[];
 extern const int sAssetFileLengths[];
 extern const int sAssetFilesCount;
 
-Handle<Value> sReadAsset(const Arguments &pArgs) {
+static void sReadAsset(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   int tIndex = -1;
   int tByteIndex = 0;
   int i;
 
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Too many arguments."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments.")));
+
+    return;
   }
 
   String::Utf8Value tAssetName(pArgs[0]);
@@ -213,62 +240,87 @@ Handle<Value> sReadAsset(const Arguments &pArgs) {
   }
 
   if (tIndex == -1) {
-    return Null();
+    pArgs.GetReturnValue().Set(Null(tIsolate));
+
+    return;
   }
 
-  Handle<String> tContents = String::New(sAssetFiles + tByteIndex, sAssetFileLengths[tIndex]);
+  Handle<String> tContents = String::NewFromUtf8(tIsolate, sAssetFiles + tByteIndex, String::kNormalString, sAssetFileLengths[tIndex]);
 
-  return tContents;
+  pArgs.GetReturnValue().Set(tContents);
 }
 
-Handle<Value> sRead(const Arguments &pArgs) {
+static void sRead(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Too many arguments."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments.")));
+
+    return;
   }
 
   String::Utf8Value tStr(pArgs[0]);
-  return sReadFile(sToCString(tStr));
+  pArgs.GetReturnValue().Set(sReadFile(tIsolate, sToCString(tStr)));
 }
 
-Handle<Value> sWrite(const Arguments &pArgs) {
+static void sWrite(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 2) {
-    return ThrowException(String::New("Too many arguments."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments.")));
+
+    return;
   }
 
   String::Utf8Value tFileName(pArgs[0]);
   String::Utf8Value tContent(pArgs[1]);
 
-  return sWriteFile(sToCString(tFileName), sToCString(tContent), tContent.length());
+  sWriteFile(tIsolate, sToCString(tFileName), sToCString(tContent), tContent.length());
+
+  pArgs.GetReturnValue().Set(Undefined(tIsolate));
 }
 
-Handle<Value> sFork(const Arguments &pArgs) {
+static void sFork(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 0) {
-    return ThrowException(String::New("Too many arguments."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments.")));
+
+    return;
   }
 
   pid_t tPid = fork();
-  return Integer::NewFromUnsigned(tPid);
+  pArgs.GetReturnValue().Set(Integer::NewFromUnsigned(tIsolate, tPid));
 }
 
-Handle<Value> sSleep(const Arguments &pArgs) {
+static void sSleep(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Too many arguments"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments")));
+
+    return;    
   }
+
   Local<Integer> tTime = Local<Integer>::Cast(pArgs[0]);
   sleep(tTime->Int32Value());
-  return Undefined();
+  pArgs.GetReturnValue().Set(Undefined(tIsolate));
 }
 
-Handle<Value> sSystem(const Arguments &pArgs) {
+static void sSystem(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Too many arguments"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments")));
   }
 
   String::Utf8Value tCommand(pArgs[0]);
   FILE *tFp = popen(*tCommand, "r");
 
   if (tFp == NULL) {
-    return ThrowException(String::New("Failed to execute command."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Failed to execute command.")));
+
+    return;
   }
 
   char tBuffer[256];
@@ -280,84 +332,94 @@ Handle<Value> sSystem(const Arguments &pArgs) {
 
   pclose(tFp);
 
-  Handle<String> tValue = String::New(tResult.c_str(), tResult.length());
+  Handle<String> tValue = String::NewFromUtf8(tIsolate, tResult.c_str(), String::kNormalString, tResult.length());
 
-  return tValue;
+  pArgs.GetReturnValue().Set(tValue);
 }
 
-Handle<Value> sChdir(const Arguments &pArgs) {
+static void sChdir(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Too many arguments"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments")));
+
+    return;
   }
 
   String::Utf8Value tDirectory(pArgs[0]);
   if (chdir(*tDirectory) != 0) {
-    return ThrowException(String::New("Failed to change to given directory."));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Failed to change to given directory.")));
+
+    return;
   }
 
-  return Undefined();
+  pArgs.GetReturnValue().Set(Undefined(tIsolate));
 }
 
-Handle<Value> sGetcwd(const Arguments &pArgs) {
+static void sGetcwd(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   // TODO: Support any size of directory name...
   char *dir = (char *)malloc(sizeof(char) * 1024);
   if (dir == NULL) {
-    return ThrowException(String::New("Out of memory"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Out of memory")));
+
+    return;
   }
 
   if (getcwd(dir, sizeof(char) * 1024) == NULL) {
-    return ThrowException(String::New("Could not get current working directory"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Could not get current working directory")));
+
+    return;
   }
 
-  Handle<String> tReturn = String::New(dir);
+  Handle<String> tReturn = String::NewFromUtf8(tIsolate, dir);
 
   free(dir);
 
-  return tReturn;
+  pArgs.GetReturnValue().Set(tReturn);
 }
 
 inline void cleanContextIfSandboxed(Handle<Context> pContext, bool pIsSandboxed) {
   if (pIsSandboxed) {
-    Persistent<Context> tContext = (Persistent<Context>)pContext;
-    tContext->Exit();
-    tContext.Dispose();
+    pContext->Exit();
   }
 }
 
-Handle<Value> sEvalScript(const Arguments &pArgs, bool pIsSandboxed, bool pIsString) {
+static void sEvalScript(const v8::FunctionCallbackInfo<Value> &pArgs, bool pIsSandboxed, bool pIsString) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (!pArgs[0]->IsString()) {
-    return ThrowException(String::New("First argument must be a string"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "First argument must be a string")));
   }
 
   if (pIsSandboxed && !pArgs[1]->IsObject()) {
-    return ThrowException(String::New("Second argument must be an object or null"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Second argument must be an object or null")));
   }
 
   Handle<Value> tContentsAsValue;
 
   if (!pIsString) {
     String::Utf8Value tFileName(pArgs[0]);
-    tContentsAsValue = sReadFile(*tFileName);
+    tContentsAsValue = sReadFile(tIsolate, *tFileName);
   } else {
     tContentsAsValue = pArgs[0];
   }
 
   if (tContentsAsValue.IsEmpty()) {
-    if (pIsString) {
-      return ThrowException(String::New("Invalid string to eval"));
-    } else {
-      return ThrowException(String::New("Failed to open file"));
-    }
+    pArgs.GetReturnValue().Set(tContentsAsValue);
+
+    return;
   }
 
-  HandleScope tScope;
-  Handle<Context> tContext = Context::GetCurrent();
+  HandleScope tScope(tIsolate);
+  Handle<Context> tContext = tIsolate->GetCurrentContext();
 
   if (pIsSandboxed) {
     Handle<Object> tGlobalObject = Handle<Object>::Cast(pArgs[1]);
 
     Handle<Array> tProperties = tGlobalObject->GetPropertyNames();
-    Handle<ObjectTemplate> tGlobal = ObjectTemplate::New();
+    Handle<ObjectTemplate> tGlobal = ObjectTemplate::New(tIsolate);
 
     for (int i = 0, il = tProperties->Length(); i < il; i++) {
       Handle<String> tKey = Handle<String>::Cast(tProperties->Get(i));
@@ -365,49 +427,57 @@ Handle<Value> sEvalScript(const Arguments &pArgs, bool pIsSandboxed, bool pIsStr
       tGlobal->Set(tKey, tValue);
     }
 
-    tContext = Context::New(NULL, tGlobal);
+    tContext = Context::New(tIsolate, NULL, tGlobal);
     tContext->Enter();
   }
 
   TryCatch tTryCatch;
 
   String::Utf8Value tScriptToEval(tContentsAsValue);
-  Handle<String> tScriptHandle = String::New(*tScriptToEval);
+  Handle<String> tScriptHandle = String::NewFromUtf8(tIsolate, *tScriptToEval);
 
   Handle<Script> tScript = Script::Compile(tScriptHandle);
 
   if (tScript.IsEmpty()) {
     cleanContextIfSandboxed(tContext, pIsSandboxed);
-    return ThrowException(tTryCatch.Exception());
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(tTryCatch.Exception()));
+
+    return;
   }
 
   Handle<Value> tResult = tScript->Run();
 
   if (tResult.IsEmpty()) {
     cleanContextIfSandboxed(tContext, pIsSandboxed);
-    return ThrowException(tTryCatch.Exception());
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(tTryCatch.Exception()));
+
+    return;
   }
 
   cleanContextIfSandboxed(tContext, pIsSandboxed);
 
-  return Undefined();
+  pArgs.GetReturnValue().Set(Undefined(tIsolate));
 }
 
-Handle<Value> sEvalFileInSandbox(const Arguments &pArgs) {
-  return sEvalScript(pArgs, true, false);
+static void sEvalFileInSandbox(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  sEvalScript(pArgs, true, false);
 }
 
-Handle<Value> sEvalInSandbox(const Arguments &pArgs) {
-  return sEvalScript(pArgs, true, true);
+static void sEvalInSandbox(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  sEvalScript(pArgs, true, true);
 }
 
-Handle<Value> sEvalFile(const Arguments &pArgs) {
-  return sEvalScript(pArgs, false, false);
+static void sEvalFile(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  sEvalScript(pArgs, false, false);
 }
 
-Handle<Value> sStat(const Arguments &pArgs) {
+static void sStat(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Too many arguments"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Too many arguments")));
+
+    return;
   }
 
   String::Utf8Value tFileName(pArgs[0]);
@@ -415,45 +485,57 @@ Handle<Value> sStat(const Arguments &pArgs) {
   struct stat tStat;
 
   if (stat(*tFileName, &tStat) == -1) {
-    return Null();
+    pArgs.GetReturnValue().Set(Null(tIsolate));
+
+    return;
   }
 
-  Local<Object> tStatObj = Object::New();
-  tStatObj->Set(String::New("deviceId"), Integer::New(tStat.st_dev));
-  tStatObj->Set(String::New("inodeNumber"), Integer::New(tStat.st_ino));
-  tStatObj->Set(String::New("mode"), Integer::New(tStat.st_mode));
-  tStatObj->Set(String::New("hardLinksCount"), Integer::New(tStat.st_nlink));
-  tStatObj->Set(String::New("uid"), Integer::New(tStat.st_uid));
-  tStatObj->Set(String::New("gid"), Integer::New(tStat.st_gid));
-  tStatObj->Set(String::New("specialDeviceId"), Integer::New(tStat.st_rdev));
-  tStatObj->Set(String::New("size"), Integer::New(tStat.st_size));
-  tStatObj->Set(String::New("blockSize"), Integer::New(tStat.st_blksize));
-  tStatObj->Set(String::New("blocksCount"), Integer::New(tStat.st_blocks));
-  tStatObj->Set(String::New("atime"), Integer::New(tStat.st_atime));
-  tStatObj->Set(String::New("mtime"), Integer::New(tStat.st_mtime));
-  tStatObj->Set(String::New("ctime"), Integer::New(tStat.st_ctime));
+  Handle<Object> tStatObj = Object::New(tIsolate);
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "deviceId"), Integer::New(tIsolate, tStat.st_dev));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "inodeNumber"), Integer::New(tIsolate, tStat.st_ino));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "mode"), Integer::New(tIsolate, tStat.st_mode));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "hardLinksCount"), Integer::New(tIsolate, tStat.st_nlink));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "uid"), Integer::New(tIsolate, tStat.st_uid));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "gid"), Integer::New(tIsolate, tStat.st_gid));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "specialDeviceId"), Integer::New(tIsolate, tStat.st_rdev));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "size"), Integer::New(tIsolate, tStat.st_size));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "blockSize"), Integer::New(tIsolate, tStat.st_blksize));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "blocksCount"), Integer::New(tIsolate, tStat.st_blocks));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "atime"), Integer::New(tIsolate, tStat.st_atime));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "mtime"), Integer::New(tIsolate, tStat.st_mtime));
+  tStatObj->Set(String::NewFromUtf8(tIsolate, "ctime"), Integer::New(tIsolate, tStat.st_ctime));
 
-  return tStatObj;
+  pArgs.GetReturnValue().Set(tStatObj);
 }
 
-Handle<Value> sSetenv(const Arguments &pArgs) {
+static void sSetenv(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 2) {
-    return ThrowException(String::New("Need 2 arguments"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Need 2 arguments")));
+
+    return;
   }
 
   String::Utf8Value tName(pArgs[0]);
   String::Utf8Value tValue(pArgs[1]);
 
   if (setenv(*tName, *tValue, 1) != 0) {
-    return ThrowException(String::New("Failed to set environment variable"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Failed to set environment variable")));
+
+    return;
   }
 
-  return Undefined();
+  pArgs.GetReturnValue().Set(Undefined(tIsolate));
 }
 
-Handle<Value> sGetenv(const Arguments &pArgs) {
+static void sGetenv(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Need 1 argument"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Need 1 argument")));
+
+    return;
   }
 
   String::Utf8Value tName(pArgs[0]);
@@ -461,50 +543,64 @@ Handle<Value> sGetenv(const Arguments &pArgs) {
   char *tValue;
 
   if ((tValue = getenv(*tName)) == NULL) {
-    return Null();
+    pArgs.GetReturnValue().Set(Null(tIsolate));
+
+    return;
   }
 
-  Handle<String> tResult = String::New(tValue);
+  Handle<String> tResult = String::NewFromUtf8(tIsolate, tValue);
 
-  return tResult;
+  pArgs.GetReturnValue().Set(tResult);
 }
 
-Handle<Value> sUnsetenv(const Arguments &pArgs) {
+static void sUnsetenv(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Need 1 argument"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Need 1 argument")));
+
+    return;
   }
 
   String::Utf8Value tName(pArgs[0]);
 
   if (unsetenv(*tName) != 0) {
-    return ThrowException(String::New("Failed to unset environment variable"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Failed to unset environment variable")));
+
+    return;
   }
 
-  return Undefined();
+  pArgs.GetReturnValue().Set(Undefined(tIsolate));
 }
 
-Handle<Value> sRealpath(const Arguments &pArgs) {
+static void sRealpath(const v8::FunctionCallbackInfo<Value> &pArgs) {
+  Isolate *tIsolate = pArgs.GetIsolate();
+  
   if (pArgs.Length() != 1) {
-    return ThrowException(String::New("Need 1 argument"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Need 1 argument")));
+
+    return;
   }
 
   String::Utf8Value tName(pArgs[0]);
 
   char tResolvedName[PATH_MAX + 1];
   if (realpath(*tName, tResolvedName) == NULL) {
-    return ThrowException(String::New("Invalid path to realpath"));
+    pArgs.GetReturnValue().Set(tIsolate->ThrowException(String::NewFromUtf8(tIsolate, "Invalid path to realpath")));
+
+    return;
   }
 
-  Handle<String> tResult = String::New(tResolvedName);
+  Handle<String> tResult = String::NewFromUtf8(tIsolate, tResolvedName);
 
-  return tResult;
+  pArgs.GetReturnValue().Set(tResult);
 }
 
 
-Handle<Value> sReadFile(const char *pName) {
+static Handle<Value> sReadFile(Isolate *pIsolate, const char *pName) {
   FILE *tFile = fopen(pName, "rb");
   if (tFile == NULL) {
-    return ThrowException(String::New("File doesn't exist."));
+    return pIsolate->ThrowException(String::NewFromUtf8(pIsolate, "File doesn't exist."));
   }
 
   fseek(tFile, 0, SEEK_END);
@@ -521,28 +617,29 @@ Handle<Value> sReadFile(const char *pName) {
 
   fclose(tFile);
 
-  Handle<String> tResult = String::New(tChars, tSize);
+  Handle<String> tResult = String::NewFromUtf8(pIsolate, tChars, String::kNormalString, tSize);
   delete[] tChars;
 
   return tResult;
 }
 
-Handle<Value> sWriteFile(const char *pName, const char *pContent, int pLength) {
+static Handle<Value> sWriteFile(Isolate *pIsolate, const char *pName, const char *pContent, int pLength) {
   FILE *tFile = fopen(pName, "wb");
   if (tFile == NULL) {
-    return ThrowException(String::New("Could not open file for writing."));
+    return pIsolate->ThrowException(String::NewFromUtf8(pIsolate, "Could not open file for writing."));
   }
 
   if (fwrite(pContent, 1, pLength, tFile) != pLength) {
     fclose(tFile);
-    return ThrowException(String::New("Failed writing all the data to file."));
+
+    return pIsolate->ThrowException(String::NewFromUtf8(pIsolate, "Failed writing all the data to file."));
   }
 
   fclose(tFile);
 
-  return Undefined();
+  return Undefined(pIsolate);
 }
 
-void sReportException(TryCatch *pHandler) {
+static void sReportException(TryCatch *pHandler) {
   printf("Exception occurred\n");
 }

@@ -16,58 +16,33 @@
 using namespace std;
 using namespace v8;
 
-Persistent<Context> sCreateContext();
+Handle<Context> sCreateContext(Isolate *pIsolate);
 
-Handle<Value> sPrint(const Arguments &pArgs);
-
-Handle<Value> sInput(const Arguments &pArgs);
-
-Handle<Value> sRead(const Arguments &pArgs);
-
-Handle<Value> sWrite(const Arguments &pArgs);
-
-Handle<Value> sFork(const Arguments &pArgs);
-
-Handle<Value> sSleep(const Arguments &pArgs);
-
-Handle<Value> sSystem(const Arguments &pArgs);
-
-Handle<Value> sChdir(const Arguments &pArgs);
-
-Handle<Value> sGetcwd(const Arguments &pArgs);
-
-Handle<Value> sEvalFileInSandbox(const Arguments &pArgs);
-
-Handle<Value> sEvalInSandbox(const Arguments &pArgs);
-
-Handle<Value> sEvalFile(const Arguments &pArgs);
-
-Handle<Value> sStat(const Arguments &pArgs);
-
-Handle<Value> sSetenv(const Arguments &pArgs);
-
-Handle<Value> sGetenv(const Arguments &pArgs);
-
-Handle<Value> sUnsetenv(const Arguments &pArgs);
-
-Handle<Value> sRealpath(const Arguments &pArgs);
-
-Handle<Value> sReadAsset(const Arguments &pArgs);
-
-Handle<Value> sDLOpen(const Arguments &pArgs);
-
-Handle<Value> sDLSym(const Arguments &pArgs);
-
-Handle<Value> sDLClose(const Arguments &pArgs);
-
-Handle<Value> sDLError(const Arguments &pArgs);
-
-
-Handle<Value> sReadFile(const char *pName);
-
-Handle<Value> sWriteFile(const char *pName, const char *pContent, int pLength);
-
-void sReportException(TryCatch *pHandler);
+static void sPrint(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sInput(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sRead(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sWrite(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sFork(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sSleep(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sSystem(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sChdir(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sGetcwd(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sEvalFileInSandbox(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sEvalInSandbox(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sEvalFile(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sStat(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sSetenv(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sGetenv(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sUnsetenv(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sRealpath(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sReadAsset(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sDLOpen(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sDLSym(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sDLClose(const v8::FunctionCallbackInfo<Value> &pArgs);
+static void sDLError(const v8::FunctionCallbackInfo<Value> &pArgs);
+static Handle<Value> sReadFile(Isolate *pIsolate, const char *pName);
+static Handle<Value> sWriteFile(Isolate *pIsolate, const char *pName, const char *pContent, int pLength);
+static void sReportException(TryCatch *pHandler);
 
 inline const char* sToCString(const String::Utf8Value &pValue) {
   return *pValue ? *pValue : "<string conversion failed>";

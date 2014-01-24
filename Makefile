@@ -23,20 +23,20 @@ ASSET_DIR := assets
 NATIVE_SRC_DIR := $(SRC_DIR)/native
 
 ifeq ($(OS),Darwin)
-  	TARGET ?= x64.release
+  	TARGET ?= x64
 	CFLAGS := $(CFLAGS) -m64
-	V8DIR_OUT := vendor/v8/out/$(TARGET)/
+	V8DIR_OUT := vendor/v8/out/$(TARGET).release/
 endif
 
 ifeq ($(OS),Linux)
   	ifeq ($(ARCH),x86_64)
 		CFLAGS := $(CFLAGS) -m64
-  		TARGET ?= x64.release
+  		TARGET ?= x64
 	else
 		CFLAGS := $(CFLAGS) -m32
-  		TARGET ?= ia32.release
+  		TARGET ?= ia32
 	endif
-	V8DIR_OUT := vendor/v8/out/$(TARGET)/obj.target/tools/gyp/
+	V8DIR_OUT := vendor/v8/out/$(TARGET).release/obj.target/
 endif
 
 NATIVE_FILES := $(shell find $(NATIVE_SRC_DIR) -type f -name '*.cc')
@@ -92,7 +92,7 @@ $(ASSET_BUILD_FILES): $(ASSET_BUILD_DIR)/%.c: %
 	xxd -i $< | tr -d '\n{}' | sed 's/^unsigned char \([a-zA-Z0-9_]*\)\[\] =/#define \1/' | tr ';' '\n' | sed 's/unsigned int \([a-zA-Z0-9_]*\) =/#define \1/' > $@
 
 _jsexec: $(BUILD_DIR)/javascript_files.o $(BUILD_DIR)/asset_files.o $(NATIVE_BUILD_FILES)
-	$(LINK) $(CFLAGS) $^ -pthread -fno-rtti -fno-exceptions -fvisibility=hidden -fdata-sections -ffunction-sections -fomit-frame-pointer -O3 -L$(V8DIR_OUT) -lv8_base -lv8_snapshot -ldl -o $(OUT)/$(EXEC)
+	$(LINK) $(CFLAGS) $^ -pthread -fno-rtti -fno-exceptions -fvisibility=hidden -fdata-sections -ffunction-sections -fomit-frame-pointer -O3 -L$(V8DIR_OUT)tools/gyp/ -lv8_base.$(TARGET) -lv8_snapshot -L$(V8DIR_OUT)/third_party/icu/ -licui18n -licuuc -licudata -ldl -o $(OUT)/$(EXEC)
 
 $(BUILD_DIR)/javascript_files.c: $(JS_BUILD_FILES)
 	echo "$(TEMP_JS_FILES)" > $@;
@@ -122,7 +122,7 @@ v8:
 	make -C "vendor/v8" \
 	  CXX=$(CXX) \
 	  LINK=$(CXX) \
-	  $(TARGET)
+	  $(TARGET).release
 
 JSWorkBench.pkg: jsexec
 	rm -rf build/pkg 2> /dev/null;

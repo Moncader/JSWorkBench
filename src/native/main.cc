@@ -24,28 +24,34 @@ extern const int sAssetFileLengths[];
 extern const int sAssetFilesCount;
 
 int main(int argc, char *argv[]) {
-  HandleScope tScope;
+  V8::InitializeICU();
+  V8::SetFlagsFromCommandLine(&argc, argv, true);
 
-  Persistent<Context> tContext = sCreateContext();
+  Isolate *tIsolate = Isolate::GetCurrent();
+
+  HandleScope tScope(tIsolate);
+
+  Handle<Context> tContext = sCreateContext(tIsolate);
 
   if (tContext.IsEmpty()) {
     printf("Error creating context\n");
+
     return 1;
   }
 
   tContext->Enter();
 
-  Handle<Array> tArguments = Array::New(argc);
+  Handle<Array> tArguments = Array::New(tIsolate, argc);
 
   for (int i = 0; i < argc; i++) {
-    tArguments->Set(i, String::New(argv[i]));
+    tArguments->Set(i, String::NewFromUtf8(tIsolate, argv[i]));
   }
 
-  tContext->Global()->Set(String::New("args"), tArguments);
+  tContext->Global()->Set(String::NewFromUtf8(tIsolate, "args"), tArguments);
 
   char *tPointer = sJavaScriptFiles;
   for (int i = 0; i < sJavaScriptFilesCount; i++) {
-    Handle<String> tStr = String::New(tPointer, sJavaScriptFileLengths[i]);
+    Handle<String> tStr = String::NewFromUtf8(tIsolate, tPointer, String::kNormalString, sJavaScriptFileLengths[i]);
     TryCatch tTryCatch;
 
     Handle<Script> tScript = Script::Compile(tStr);
@@ -68,10 +74,10 @@ int main(int argc, char *argv[]) {
     tPointer += sJavaScriptFileLengths[i];
   }
 
-  if (tContext->Global()->Has(String::New("main"))) {
+  if (tContext->Global()->Has(String::NewFromUtf8(tIsolate, "main"))) {
     TryCatch tTryCatch;
-    Local<Function> tFunction = Function::Cast(*tContext->Global()->Get(String::New("main")));
-    Local<Value> tResult = tFunction->Call(tContext->Global(), 0, NULL);
+    Function *tFunction = Function::Cast(*tContext->Global()->Get(String::NewFromUtf8(tIsolate, "main")));
+    Handle<Value> tResult = tFunction->Call(tContext->Global(), 0, NULL);
     if (tResult.IsEmpty()) {
       Handle<Value> tException = tTryCatch.StackTrace();
       String::Utf8Value tErrString(tException);
@@ -80,7 +86,8 @@ int main(int argc, char *argv[]) {
   }
 
   tContext->Exit();
-  tContext.Dispose();
+  tIsolate->Exit();
+  tIsolate->Dispose();
 
   return 0;
 }
