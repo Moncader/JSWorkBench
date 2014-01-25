@@ -24,7 +24,7 @@ NATIVE_SRC_DIR := $(SRC_DIR)/native
 
 ifeq ($(OS),Darwin)
   	TARGET ?= x64
-	CFLAGS := $(CFLAGS) -m64
+	CFLAGS := $(CFLAGS) -m64 -stdlib=libstdc++
 	V8DIR_OUT := vendor/v8/out/$(TARGET).release/
 	LIBV8_OUT :=
 	LIBICU_OUT := 
