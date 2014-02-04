@@ -24,8 +24,10 @@ NATIVE_SRC_DIR := $(SRC_DIR)/native
 
 ifeq ($(OS),Darwin)
   	TARGET ?= x64
-	CFLAGS := $(CFLAGS) -m64
+	CFLAGS := $(CFLAGS) -m64 -stdlib=libstdc++
 	V8DIR_OUT := vendor/v8/out/$(TARGET).release/
+	LIBV8_OUT :=
+	LIBICU_OUT := 
 endif
 
 ifeq ($(OS),Linux)
@@ -37,6 +39,8 @@ ifeq ($(OS),Linux)
   		TARGET ?= ia32
 	endif
 	V8DIR_OUT := vendor/v8/out/$(TARGET).release/obj.target/
+	LIBV8_OUT := tools/gyp/
+	LIBICU_OUT := third_party/icu/
 endif
 
 NATIVE_FILES := $(shell find $(NATIVE_SRC_DIR) -type f -name '*.cc')
@@ -92,7 +96,7 @@ $(ASSET_BUILD_FILES): $(ASSET_BUILD_DIR)/%.c: %
 	xxd -i $< | tr -d '\n{}' | sed 's/^unsigned char \([a-zA-Z0-9_]*\)\[\] =/#define \1/' | tr ';' '\n' | sed 's/unsigned int \([a-zA-Z0-9_]*\) =/#define \1/' > $@
 
 _jsexec: $(BUILD_DIR)/javascript_files.o $(BUILD_DIR)/asset_files.o $(NATIVE_BUILD_FILES)
-	$(LINK) $(CFLAGS) $^ -pthread -fno-rtti -fno-exceptions -fvisibility=hidden -fdata-sections -ffunction-sections -fomit-frame-pointer -O3 -L$(V8DIR_OUT)tools/gyp/ -lv8_base.$(TARGET) -lv8_snapshot -L$(V8DIR_OUT)/third_party/icu/ -licui18n -licuuc -licudata -ldl -o $(OUT)/$(EXEC)
+	$(LINK) $(CFLAGS) $^ -pthread -fno-rtti -fno-exceptions -fvisibility=hidden -fdata-sections -ffunction-sections -fomit-frame-pointer -O3 -L$(V8DIR_OUT)$(LIBV8_OUT) -lv8_base.$(TARGET) -lv8_snapshot -L$(V8DIR_OUT)$(LIBICU_OUT) -licui18n -licuuc -licudata -ldl -o $(OUT)/$(EXEC)
 
 $(BUILD_DIR)/javascript_files.c: $(JS_BUILD_FILES)
 	echo "$(TEMP_JS_FILES)" > $@;
