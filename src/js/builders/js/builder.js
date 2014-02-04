@@ -571,11 +571,12 @@
     }
 
     if (tScope.members.value.hasOwnProperty(tName)) {
-        return tScope.members.value[tName];
-      }
+      return tScope.members.value[tName];
+    }
 
     for (i = tScopes.length - 1; i >= 0; i--) {
       tScope = tScopes[i];
+      
       if (tScope.members.value.hasOwnProperty(tName)) {
         return tScope.members.value[tName];
       }
@@ -614,7 +615,7 @@
         if (tType === 'VariableDeclarator') {
           tSelf.assign(tAST.id.name, UNDEFINED());
         } else if (tType === 'FunctionDeclaration') {
-          tNewScope = tSelf.newChildScope();
+          tNewScope = tSelf.newChildScope({});
           tFunction = createFunction(tNewScope, tAST.id.name, tAST.params, tAST.body);
           tNewScope.thisMember = tFunction;
           tSelf.assign(tAST.id.name, tFunction);
@@ -690,37 +691,38 @@
 
   Scope.prototype.handleAndResolve = function(pAST) {
     var tResult = this.handle(pAST);
+    
     return this.resolve(tResult);
   };
 
   function createFunction(pScope, pId, pParams, pBody) {
-    var tFunction = new Value(function() {
+    var tFunction = new Value(function(pScope) {
       var tResolved;
       var tArguments;
       var tLength;
-      var tScope = tFunction.scope; // The scope can change at runtime so we don't use pScope.
 
       if (pId) {
-        tScope.assign(pId, tFunction);
+        pScope.assign(pId, tFunction);
       }
 
-      tResolved = tScope.resolve('arguments');
+      tResolved = pScope.resolve('arguments');
       if (tResolved && pParams) {
         tArguments = tResolved.value;
         tLength = tArguments.length;
         for (i = 0, il = pParams.length; i < il; i++) {
           if (i < tLength) {
-            tScope.assign(pParams[i].name, tArguments[i]);
+            pScope.assign(pParams[i].name, tArguments[i]);
           } else {
-            tScope.assign(pParams[i].name, new Value(void 0));
+            pScope.assign(pParams[i].name, new Value(void 0));
           }
         }
       }
 
-      tScope.addAST(pBody);
-      tScope.interpret();
+      pScope.ast = [];
+      pScope.addAST(pBody);
+      pScope.interpret();
 
-      return tScope.returnValue;
+      return pScope.returnValue;
     });
 
     tFunction.scope = pScope;
@@ -752,8 +754,17 @@
   };
 
   Value.prototype.copy = function(pValue) {
-    for (var k in pValue) {
-      this[k] = pValue[k]
+    this.value = pValue.value;
+    this.proto = pValue.proto;
+    this.isLiteral = pValue.isLiteral;
+    this.isSet = pValue.isSet;
+    this.isRequired = pValue.isRequired;
+    this.isNative = pValue.isNative;
+
+    if ('scope' in pValue) {
+      this.scope = pValue.scope;
+    } else if ('scope' in this) {
+      delete this.scope;
     }
   };
 
@@ -824,7 +835,8 @@
     var tPrototype;
     var tNewThis;
     var i, il, k;
-    var tScope, tBackupScope = null;
+    var tScope;
+    var tBackupScope = null;
 
     for (i = 0, il = tArray.length; i < il; i++) {
       tResolved = tArray2[i] = this.handleAndResolve(tArray[i]);
@@ -841,11 +853,11 @@
       if (!tResolved.isRequired) {
         tResolved.require();
       }
-      //return UNDEFINED();
-      tResolved = createFunction(new Scope(), null, [], []);
+
+      tResolved = createFunction(this.newChildScope({}), null, [], []);
     }
 
-    var tScope = tResolved.scope;
+    tScope = tResolved.scope;
 
     if (!tScope) {
       return UNDEFINED();
@@ -869,13 +881,13 @@
 
     tScope.assign('arguments', new Value(tArray2));
 
-    tReturn = tResolved.value();
+    tReturn = tResolved.value(tScope);
 
     if (tBackupScope !== null) {
       tResolved.scope = tBackupScope;
     }
 
-    if (pAST.type === 'NewExpression' && tReturn.value === void 0) {
+    if (pAST.type === 'NewExpression') {
       return tScope.thisMember;
     }
 
@@ -883,7 +895,7 @@
   };
 
   p.FunctionExpression = function(pAST) {
-    var tNewScope = this.newChildScope();
+    var tNewScope = this.newChildScope({});
     var tFunction = createFunction(tNewScope, pAST.id ? pAST.id.name : void 0, pAST.params, pAST.body);
     tNewScope.thisMember = tFunction;
     return tFunction;
@@ -924,7 +936,8 @@
     }
 
     tResolved.copy(tResolved2);
-    return tResolved2;
+
+    return tResolved;
   };
 
   function resolveInPrototypeChain(pChain, pName) {
