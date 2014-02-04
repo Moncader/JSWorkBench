@@ -996,16 +996,20 @@
       return UNDEFINED();
     }
 
-    if (!tResolved.value[tName]) {
-      if (!tResolved.proto) {
-        tResolved = tResolved.value[tName] = UNDEFINED();
+    try {
+      if (!tResolved.value[tName]) {
+        if (!tResolved.proto) {
+          tResolved = tResolved.value[tName] = UNDEFINED();
+        } else {
+          tResolved = tResolved.value[tName] = resolveInPrototypeChain(tResolved.proto, tName);
+        }
+      } else if (!tResolved.value[tName].isSet) {
+        tResolved = new Value(tResolved.value[tName].value);
       } else {
-        tResolved = tResolved.value[tName] = resolveInPrototypeChain(tResolved.proto, tName);
+        tResolved = tResolved.value[tName];
       }
-    } else if (!tResolved.value[tName].isSet) {
-      tResolved = new Value(tResolved.value[tName].value);
-    } else {
-      tResolved = tResolved.value[tName];
+    } catch (e) {
+      print('Error thrown in MemberExpression: ' + e.toString());
     }
 
     return tResolved;
