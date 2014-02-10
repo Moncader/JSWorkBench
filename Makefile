@@ -35,7 +35,7 @@ ifeq ($(OS),Linux)
 		CFLAGS := $(CFLAGS) -m64
   		TARGET ?= x64
 	else
-		CFLAGS := $(CFLAGS) -m32
+		CFLAGS := $(CFLAGS) -m32 -lrt
   		TARGET ?= ia32
 	endif
 	V8DIR_OUT := vendor/v8/out/$(TARGET).release/obj.target/
