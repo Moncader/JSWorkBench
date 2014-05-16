@@ -31,7 +31,8 @@
 
       this.data = {
         strict: true,
-        minify: true
+        minify: true,
+        exports: null
       };
 
       this.workspace = '';
@@ -55,6 +56,10 @@
 
       if (pData.minify !== void 0) {
         tData.minify = pData.minify;
+      }
+
+      if (pData.exports !== void 0) {
+        tData.exports = pData.exports;
       }
     };
 
@@ -148,7 +153,7 @@
           tUnsortedFiles[tFileName] = global.read(tFileName);
         }
 
-        var tSortedFiles = tResolver.resolve(tUnsortedFiles);
+        var tSortedFiles = tResolver.resolve(tUnsortedFiles, this.data.exports);
         tOutput = '';
 
         for (i = 0, il = tSortedFiles.length; i < il; i++) {
