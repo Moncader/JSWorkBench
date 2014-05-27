@@ -74,21 +74,28 @@
 
           tResourceId = tResourceName;
 
-          var tNewResource = JSON.parse(JSON.stringify(tGlobalResources[tResourceName]));
+          var tNewResource;
+
+          if (pConfig.locals.resources && (tResourceName in pConfig.locals.resources)) {
+            tResourceOverriden = true;
+            tNewResource = JSON.parse(JSON.stringify(pConfig.locals.resources[tResourceName]));
+
+            for (k in tResource) {
+              if (k !== 'type' && k !== 'name') {
+                tNewResource[k] = tResource[k];
+              }
+            }
+
+            tResource = tNewResource;
+          }
+
+          tNewResource = JSON.parse(JSON.stringify(tGlobalResources[tResourceName]));
           for (k in tResource) {
             if (k !== 'type' && k !== 'name') {
               tNewResource[k] = tResource[k];
             }
           }
           tResource = tNewResource;
-
-          if (pConfig.locals.resources && (tResourceName in pConfig.locals.resources)) {
-            tResourceOverriden = true;
-            tNewResource = JSON.parse(JSON.stringify(pConfig.locals.resources[tResourceName]));
-            for (k in tNewResource) {
-              tResource[k] = tNewResource[k];
-            }
-          }
         } else {
           tResourceId = tTargetName + '__resource_' + i;
         }
