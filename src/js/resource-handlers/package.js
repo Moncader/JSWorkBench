@@ -62,7 +62,7 @@
     chdir(this.workspace);
 
     var tPackageWorkBench = new WorkBench();
-    if (!tPackageWorkBench.load(this.data.buildFile)) {
+    if (!tPackageWorkBench.load(this.data.buildFile, this.config.ignoreLocal)) {
       throw new Error('Failed to get resources of package.');
     }
     var tPackageConfig = tPackageWorkBench.config;
@@ -70,13 +70,14 @@
     tPackageConfig.isQuiet = this.config.isQuiet;
 
     if (tOverriden === false) {
+      var tDateTime = this.config.dateTime;
       if (this.data.targets) {
         var tTargets = this.data.targets;
         for (var i = 0, il = tTargets.length; i < il; i++) {
-          tPackageWorkBench.runAction('update', [tTargets[i]]);
+          tPackageWorkBench.runAction('update', tDateTime ? [tTargets[i], '--date-time=' + tDateTime] : [tTargets[i]]);
         }
       } else {
-        tPackageWorkBench.runAction('update', [this.data.target]);
+        tPackageWorkBench.runAction('update', tDateTime ? [this.data.target, '--date-time=' + tDateTime] : [this.data.target]);
       }
     }
 
@@ -94,7 +95,7 @@
     chdir(this.workspace);
 
     var tPackageWorkBench = new WorkBench();
-    if (!tPackageWorkBench.load(this.data.buildFile)) {
+    if (!tPackageWorkBench.load(this.data.buildFile, this.config.ignoreLocal)) {
       throw new Error('Failed to get resources of package.');
     }
     var tPackageConfig = tPackageWorkBench.config;

@@ -63,7 +63,7 @@
     }
   };
 
-  global.parseConfig = function(pFileName) {
+  global.parseConfig = function(pFileName, pDontOverride) {
     var tConfig = new Config();
 
     if (!pFileName) {
@@ -124,6 +124,11 @@
         tConfig.targets[k].id = k;
         tConfig.targets[k].regex = new RegExp(k);
       }
+    }
+
+    if (pDontOverride) {
+      fire('parsedConfig', tConfig);
+      return tConfig;
     }
 
     var tLocalConfig = '.jsworkbenchrc';

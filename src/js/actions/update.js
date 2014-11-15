@@ -90,6 +90,18 @@
                 return true;
               } else if (pArg === '--first-only') {
                 tFirstOnly = true;
+              } else if (pArg.indexOf('--commit=') === 0) {
+                var tCommit = pArg.substring(9);
+                pConfig.dateTime = global.util.gitCommitDate(tCommit);
+                global.util.gitUpdateCurrentBranch(tCommit);
+                pConfig.ignoreLocal = true;
+                tFirstOnly = true;
+              } else if (pArg.indexOf('--date-time=') === 0) {
+                pConfig.dateTime = pArg.substring(12);
+                pConfig.ignoreLocal = true;
+                tFirstOnly = true;
+              } else if (pArg.indexOf('--ignore-local') === 0) {
+                pConfig.ignoreLocal = true;
               }
               return false;
             });
